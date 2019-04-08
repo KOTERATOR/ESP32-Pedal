@@ -1,0 +1,13 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "C:\\Users\\iashi\\Documents\\Arduino\\hardware\\espressif\\esp32\\**"
+            ],
+            "forcedInclude": [],
+            "cStandard": "c11"
+        }
+    ],
+    "version": 4
+}
