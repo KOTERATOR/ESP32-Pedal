@@ -4,76 +4,159 @@
 #include "Dimensions.h"
 #include "List.h"
 #include "Container.h"
+#include "View.h"
+#include "DBG.h"
 
-enum LayoutSizeMode
-{
-    MATCH_PARENT,
-    WRAP_CONTENT,
-    ABSOLUTE,
-    FIXED
-};
-
-enum LayoutMode
+enum class LayoutMode
 {
     HORIZONTAL,
-    VERTICAL
+    VERTICAL,
+    ABSOLUTE
 };
 
 class Layout : public Container
 {
-protected:
-    LayoutSizeMode heightMode;
-    LayoutSizeMode widthMode;
+  protected:
     LayoutMode mode;
-    List<Container*> children;
+    List<Container *> children;
 
-public:
-    Layout(Layout * parent);
-    void add(Container & container);
+  public:
+    Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position, Size size, Layout *parent);
+    void add(Container &container);
     void calculate();
+
+    Size getChildrenBounds();
 };
 
-Layout::Layout(Layout * parent)
+Layout::Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position = Position(0, 0), Size size = Size(0, 0), Layout *parent = nullptr) : Container(widthMode, heightMode, ContainerMode::NORMAL, position, size, parent)
 {
     this->parent = parent;
-    if(parent != nullptr)
+    if (parent != nullptr)
     {
-        this->size = parent->size;
-        this->position = parent->position;
+        parent->add((*this));
     }
+    this->mode = layoutMode;
 }
 
 void Layout::calculate()
 {
+    Serial.println("CALCULATE");
+
+    Size childrenSize = getChildrenBounds();
+
+    if(widthMode == ContainerSizeMode::WRAP_CONTENT)
+    {
+        size.width = childrenSize.width;
+    }
+    else if(widthMode == ContainerSizeMode::MATCH_PARENT)
+    {
+        if(parent != nullptr)
+            size.width = parent->getSize().width;
+    }
+
+    if(heightMode == ContainerSizeMode::WRAP_CONTENT)
+    {
+        size.height = childrenSize.height;
+    }
+    else if(heightMode == ContainerSizeMode::MATCH_PARENT)
+    {
+        if(parent != nullptr)
+            size.height = parent->getSize().height;
+    }
+
     int w = 0, h = 0;
     int maxW = 0, maxH = 0;
-    for(int i = 0; i < children.size(); i++)
+    for (int i = 0; i < children.size(); i++)
     {
-        Container * c = children[i];
-        if(mode == LayoutMode::HORIZONTAL)
+        Container *c = children[i];
+
+        c->calculate();
+
+        Size s = c->getSize();
+        int cH = s.height, cW = s.width;
+        if (c->getWidthMode() == ContainerSizeMode::MATCH_PARENT)
         {
-            w += c->size.width;
-            h = c->size.height;
-            if(maxH < h)
-            {
-                maxH = h;
-            }
+            cW = size.width;
         }
-        else if(mode == LayoutMode::VERTICAL)
+        if (c->getHeightMode() == ContainerSizeMode::MATCH_PARENT)
         {
-            h += c->size.height;
-            w = c->size.width;
-            if(maxW < w)
-            {
-                maxW = w;
-            }
+            cH = size.height;
+        }
+        c->setSize(Size(cW, cH));
+
+        if (c->getContainerMode() != ContainerMode::ABSOLUTE)
+        {
+        if (mode == LayoutMode::HORIZONTAL)
+        {
+            c->setX(w);
+            w += s.width;
+            h = s.height;
+        }
+        else if (mode == LayoutMode::VERTICAL)
+        {
+            c->setY(h);
+            h += s.height;
+            w = s.width;
+        }
+        if (maxH < h)
+        {
+            maxH = h;
+        }
+        if (maxW < w)
+        {
+            maxW = w;
+        }
         }
     }
 }
 
-void Layout::add(Container & container)
+void Layout::add(Container &container)
 {
-    
+    container.setParent(this);
+    children.add(&container);
+}
+
+Size Layout::getChildrenBounds()
+{
+    DBG("getChildrenBounds: ");
+    DBG(children.size());
+    int w = 0, h = 0;
+    int maxW = 0, maxH = 0;
+    for (int i = 0; i < children.size(); i++)
+    {
+        Container *c = children[i];
+
+        c->calculate();
+        if (c->getContainerMode() == ContainerMode::ABSOLUTE)
+        {
+            DBG("CABSOLUTE");
+            continue;
+        }
+        Size s = c->getSize();
+
+        if (mode == LayoutMode::HORIZONTAL)
+        {
+            w += s.width;
+            h = s.height;
+        }
+        else if (mode == LayoutMode::VERTICAL)
+        {
+            h += s.height;
+            w = s.width;
+        }
+        if (maxH < h)
+        {
+            maxH = h;
+        }
+        if (maxW < w)
+        {
+            maxW = w;
+        }
+    }
+    Serial.print(maxW);
+    Serial.print(" ");
+    Serial.println(maxH);
+    return Size(maxW, maxH);
 }
 
 #endif

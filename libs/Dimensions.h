@@ -5,6 +5,7 @@
 class Position : public Vector2
 {
 public:
+    Position(int x = 0, int y = 0) : Vector2(x, y) { }
     Position operator+(Position rhs);
     Position operator-(Position rhs);
 };
@@ -25,16 +26,17 @@ Position Position::operator-(Position rhs)
     return pos;
 }
 
-Position Position::operator-(Position rhs)
-{
-
-}
-
 class Size
 {
 public:
     int width = 0, height = 0;
     
+    Size(int width = 0, int height = 0)
+    {
+        this->width = width;
+        this->height = height;
+    }
+
     Size operator+(Size rhs);
     Size operator-(Size rhs);
 };

@@ -3,7 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:\\Users\\iashi\\Documents\\Arduino\\hardware\\espressif\\esp32\\**"
+                "C:\\Users\\iashi\\Documents\\Arduino\\hardware\\espressif\\esp32\\**",
+                "E:\\Developing 2k\\Arduino\\libraries\\**"
             ],
             "forcedInclude": [],
             "cStandard": "c11"
