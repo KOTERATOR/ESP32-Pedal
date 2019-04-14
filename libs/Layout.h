@@ -18,13 +18,14 @@ class Layout : public Container
 {
   protected:
     LayoutMode mode;
-    List<Container *> children;
+    
 
   public:
+    List<Container *> children;
     Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position, Size size, Layout *parent);
     void add(Container &container);
     void calculate();
-
+    void draw();
     Size getChildrenBounds();
 };
 
@@ -44,23 +45,23 @@ void Layout::calculate()
 
     Size childrenSize = getChildrenBounds();
 
-    if(widthMode == ContainerSizeMode::WRAP_CONTENT)
+    if (widthMode == ContainerSizeMode::WRAP_CONTENT)
     {
         size.width = childrenSize.width;
     }
-    else if(widthMode == ContainerSizeMode::MATCH_PARENT)
+    else if (widthMode == ContainerSizeMode::MATCH_PARENT)
     {
-        if(parent != nullptr)
+        if (parent != nullptr)
             size.width = parent->getSize().width;
     }
 
-    if(heightMode == ContainerSizeMode::WRAP_CONTENT)
+    if (heightMode == ContainerSizeMode::WRAP_CONTENT)
     {
         size.height = childrenSize.height;
     }
-    else if(heightMode == ContainerSizeMode::MATCH_PARENT)
+    else if (heightMode == ContainerSizeMode::MATCH_PARENT)
     {
-        if(parent != nullptr)
+        if (parent != nullptr)
             size.height = parent->getSize().height;
     }
 
@@ -86,26 +87,32 @@ void Layout::calculate()
 
         if (c->getContainerMode() != ContainerMode::ABSOLUTE)
         {
-        if (mode == LayoutMode::HORIZONTAL)
-        {
-            c->setX(w);
-            w += s.width;
-            h = s.height;
-        }
-        else if (mode == LayoutMode::VERTICAL)
-        {
-            c->setY(h);
-            h += s.height;
-            w = s.width;
-        }
-        if (maxH < h)
-        {
-            maxH = h;
-        }
-        if (maxW < w)
-        {
-            maxW = w;
-        }
+            if (mode == LayoutMode::HORIZONTAL)
+            {
+                DBG("HORIZONTAL: ");
+                DBG(w);
+                c->setX(w);
+                DBG(c->getAbsolutePosition().x);
+                w += s.width;
+                h = s.height;
+            }
+            else if (mode == LayoutMode::VERTICAL)
+            {
+                c->setY(h);
+                h += s.height;
+                w = s.width;
+            }
+            if (maxH < h)
+            {
+                maxH = h;
+            }
+            if (maxW < w)
+            {
+                maxW = w;
+            }
+            DBG("H2");
+            DBG(((int)c));
+            DBG(c->getAbsolutePosition().x);
         }
     }
 }
@@ -157,6 +164,16 @@ Size Layout::getChildrenBounds()
     Serial.print(" ");
     Serial.println(maxH);
     return Size(maxW, maxH);
+}
+
+void Layout::draw()
+{
+    DBG("DRAW");
+    for(int i = 0; i < children.size(); i++)
+    {
+        DBG("DRAW CHILD");
+        children[i]->draw();
+    }
 }
 
 #endif

@@ -112,6 +112,14 @@ void ViewGFX::clear()
     {
         for (int y = 0; y < size.height; y++)
         {
+            buffer[x][y] = Color::BLACK;
+        }
+    }
+    draw();
+    for (int x = 0; x < size.width; x++)
+    {
+        for (int y = 0; y < size.height; y++)
+        {
             buffer[x][y] = Color::TRANSPARENT;
         }
     }

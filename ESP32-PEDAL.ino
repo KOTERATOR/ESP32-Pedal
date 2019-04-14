@@ -35,7 +35,7 @@ class Border : public View
 class Circle : public View
 {
   public:
-    Circle() : View(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::MATCH_PARENT, ContainerMode::NORMAL, Position(0, 0), Size(16, 16)) {}
+    Circle() : View(ContainerSizeMode::WRAP_CONTENT, ContainerSizeMode::WRAP_CONTENT, ContainerMode::NORMAL, Position(0, 0), Size(16, 16)) {}
 
     void onDraw()
     {
@@ -43,23 +43,28 @@ class Circle : public View
     }
 };
 
+Layout m(LayoutMode::ABSOLUTE, ContainerSizeMode::FIXED, ContainerSizeMode::FIXED, Position(0, 0), Size(128, 64));
+    Layout c(LayoutMode::VERTICAL, ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::MATCH_PARENT, Position(0, 0), Size(31, 31));
+    Border b;
+    Circle cs, cs2;
+
 void setup()
 {
     Serial.begin(115200);
     ViewGFX::setDisplay(&display);
     display.init();
 
-    Layout m(LayoutMode::ABSOLUTE, ContainerSizeMode::FIXED, ContainerSizeMode::FIXED, Position(0, 0), Size(128, 64));
-    Layout c(LayoutMode::HORIZONTAL, ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::MATCH_PARENT, Position(0, 0), Size(31, 31));
-
-    Border b;
-    Circle cs;
+    
     m.add(c);
     c.add(b);
     c.add(cs);
+    c.add(cs2);
+    Serial.print("ADDRESS: ");
+    Serial.println((int)&cs2);
     printPos(c.getPosition());
     m.calculate();
     cs.draw();
+    cs2.draw();
     b.draw();
 
     //display.drawRect(0, 0, 128, 64);
@@ -68,9 +73,18 @@ void setup()
     Serial.println((c.getWidthMode() == ContainerSizeMode::WRAP_CONTENT));
     printSize(c.getSize());
     printPos(c.getPosition());
+    printPos(cs.getAbsolutePosition());
+    printPos(cs2.getAbsolutePosition());
+    DBG(c.children.size());
 }
 
 void loop()
 {
-
+    for(int i = 0; i < 128; i++)
+    {
+        c.setX(i);
+        c.draw();
+        display.display();
+        delay(100);
+    }
 }

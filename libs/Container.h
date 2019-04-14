@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Dimensions.h"
+#include "DBG.h"
 
 enum class ContainerSizeMode
 {
@@ -46,6 +47,7 @@ class Container
     Container *getParent();
     void setParent(Container *parent);
     virtual void calculate() = 0;
+    virtual void draw() = 0;
 
     ContainerSizeMode getWidthMode() { return widthMode; }
     ContainerSizeMode getHeightMode() { return heightMode; }
@@ -81,6 +83,7 @@ Position Container::getAbsolutePosition()
 
 void Container::setPosition(Position position)
 {
+    DBG("POS CHANGED");
     this->position = position;
 }
 
