@@ -42,6 +42,7 @@ class Container
     ContainerMode getContainerMode() { return containerMode; }
 
     Size getSize();
+    Size & getReferenceSize();
     virtual void setSize(Size size);
 
     Container *getParent();
@@ -83,7 +84,6 @@ Position Container::getAbsolutePosition()
 
 void Container::setPosition(Position position)
 {
-    DBG("POS CHANGED");
     this->position = position;
 }
 
@@ -94,6 +94,11 @@ void Container::setAbsolutePosition(Position position)
 }
 
 Size Container::getSize()
+{
+    return size;
+}
+
+Size & Container::getReferenceSize()
 {
     return size;
 }

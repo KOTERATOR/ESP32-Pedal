@@ -41,7 +41,6 @@ Layout::Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSize
 
 void Layout::calculate()
 {
-    Serial.println("CALCULATE");
 
     Size childrenSize = getChildrenBounds();
 
@@ -89,10 +88,7 @@ void Layout::calculate()
         {
             if (mode == LayoutMode::HORIZONTAL)
             {
-                DBG("HORIZONTAL: ");
-                DBG(w);
                 c->setX(w);
-                DBG(c->getAbsolutePosition().x);
                 w += s.width;
                 h = s.height;
             }
@@ -110,9 +106,6 @@ void Layout::calculate()
             {
                 maxW = w;
             }
-            DBG("H2");
-            DBG(((int)c));
-            DBG(c->getAbsolutePosition().x);
         }
     }
 }
@@ -125,8 +118,6 @@ void Layout::add(Container &container)
 
 Size Layout::getChildrenBounds()
 {
-    DBG("getChildrenBounds: ");
-    DBG(children.size());
     int w = 0, h = 0;
     int maxW = 0, maxH = 0;
     for (int i = 0; i < children.size(); i++)
@@ -136,7 +127,6 @@ Size Layout::getChildrenBounds()
         c->calculate();
         if (c->getContainerMode() == ContainerMode::ABSOLUTE)
         {
-            DBG("CABSOLUTE");
             continue;
         }
         Size s = c->getSize();
@@ -160,18 +150,13 @@ Size Layout::getChildrenBounds()
             maxW = w;
         }
     }
-    Serial.print(maxW);
-    Serial.print(" ");
-    Serial.println(maxH);
     return Size(maxW, maxH);
 }
 
 void Layout::draw()
 {
-    DBG("DRAW");
     for(int i = 0; i < children.size(); i++)
     {
-        DBG("DRAW CHILD");
         children[i]->draw();
     }
 }

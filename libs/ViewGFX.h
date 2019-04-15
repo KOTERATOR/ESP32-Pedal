@@ -34,6 +34,8 @@ class ViewGFX : public Adafruit_GFX
     void clear();
 
     void drawPixel(int16_t x, int16_t y, uint16_t color);
+    void drawText(int16_t x, int16_t y, String str, int16_t color = Color::WHITE, int8_t textSize = 1);
+    Size getTextBounds(String str);
 
     Size getSize() { return size; }
     void setSize(Size size);
@@ -47,10 +49,6 @@ SSD1306 *ViewGFX::display_ptr;
 ViewGFX::ViewGFX(Size size) : Adafruit_GFX(size.width, size.height)
 {
     this->size = size;
-    Serial.print("ctor ");
-    Serial.print(size.width);
-    Serial.print(" ");
-    Serial.println(size.height);
     buffer = new int8_t *[size.width];
     for (int i = 0; i < size.width; i++)
     {
@@ -60,6 +58,7 @@ ViewGFX::ViewGFX(Size size) : Adafruit_GFX(size.width, size.height)
             buffer[i][j] = Color::BLACK;
         }
     }
+    cp437(true);
 }
 
 ViewGFX::~ViewGFX()
@@ -112,14 +111,6 @@ void ViewGFX::clear()
     {
         for (int y = 0; y < size.height; y++)
         {
-            buffer[x][y] = Color::BLACK;
-        }
-    }
-    draw();
-    for (int x = 0; x < size.width; x++)
-    {
-        for (int y = 0; y < size.height; y++)
-        {
             buffer[x][y] = Color::TRANSPARENT;
         }
     }
@@ -146,6 +137,30 @@ void ViewGFX::drawPixel(int16_t x, int16_t y, uint16_t color)
                 break;
         }
     }
+}
+
+void ViewGFX::drawText(int16_t x, int16_t y, String str, int16_t color, int8_t textSize)
+{
+    setCursor(x, y);
+    setTextSize(textSize);
+    setTextColor(color);
+    
+    for(int i = 0; i < str.length(); i++)
+    {
+        write(str[i]);
+    }
+}
+
+Size ViewGFX::getTextBounds(String str)
+{
+    int16_t x1, y1;
+    uint16_t w, h;
+    int len = str.length()+1;
+    char * text = new char[len];
+    str.toCharArray(text, len);
+    Adafruit_GFX::getTextBounds((char*)text, 0, 0, &x1, &y1, &w, &h);
+    delete [] text;
+    return Size(w, h);
 }
 
 void ViewGFX::setSize(Size size)

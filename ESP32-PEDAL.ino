@@ -5,6 +5,8 @@
 #include "libs/View.h"
 #include "libs/Layout.h"
 #include "SSD1306.h"
+#include "VirtualPotentiometer.h"
+#include "PotentiometerView.h"
 
 SSD1306 display(0x3c, 21, 22);
 
@@ -25,7 +27,7 @@ void printSize(Size s)
 class Border : public View
 {
   public:
-    Border() : View(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::MATCH_PARENT, ContainerMode::ABSOLUTE, Position(0, 0), Size(0, 0), nullptr) {}
+    Border() : View(ContainerSizeMode::FIXED, ContainerSizeMode::FIXED, ContainerMode::ABSOLUTE, Position(0, 0), Size(0, 0), nullptr) {}
     void onDraw()
     {
         gfx.drawRect(0, 0, size.width, size.height, WHITE);
@@ -44,47 +46,31 @@ class Circle : public View
 };
 
 Layout m(LayoutMode::ABSOLUTE, ContainerSizeMode::FIXED, ContainerSizeMode::FIXED, Position(0, 0), Size(128, 64));
-    Layout c(LayoutMode::VERTICAL, ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::MATCH_PARENT, Position(0, 0), Size(31, 31));
-    Border b;
-    Circle cs, cs2;
+Layout c(LayoutMode::HORIZONTAL, ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::MATCH_PARENT, Position(0, 0), Size(31, 31));
+
+VirtualPotentiometer pot;
+PotentiometerView potView(pot, "TONE");
+Circle circle;
 
 void setup()
 {
     Serial.begin(115200);
     ViewGFX::setDisplay(&display);
     display.init();
-
     
+    c.add(potView);
     m.add(c);
-    c.add(b);
-    c.add(cs);
-    c.add(cs2);
-    Serial.print("ADDRESS: ");
-    Serial.println((int)&cs2);
-    printPos(c.getPosition());
     m.calculate();
-    cs.draw();
-    cs2.draw();
-    b.draw();
-
-    //display.drawRect(0, 0, 128, 64);
-    display.display();
-    Serial.println("DISPLAYED");
-    Serial.println((c.getWidthMode() == ContainerSizeMode::WRAP_CONTENT));
-    printSize(c.getSize());
-    printPos(c.getPosition());
-    printPos(cs.getAbsolutePosition());
-    printPos(cs2.getAbsolutePosition());
-    DBG(c.children.size());
 }
 
 void loop()
 {
-    for(int i = 0; i < 128; i++)
+    for(int i = 0; i < 4096; i+=10)
     {
-        c.setX(i);
-        c.draw();
+        display.clear();
+        pot.setValue(i);
+        m.draw();
         display.display();
-        delay(100);
+        delay(10);
     }
 }

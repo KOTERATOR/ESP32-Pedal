@@ -30,10 +30,7 @@ void View::setSize(Size size)
 
 void View::draw()
 {
-    Position abs = this->getAbsolutePosition();
-    DBG("DRAW");
-    DBG(abs.x);
-    gfx.setOffset(abs);
+    gfx.setOffset(this->getAbsolutePosition());
     gfx.clear();
     onDraw();
     gfx.draw();
