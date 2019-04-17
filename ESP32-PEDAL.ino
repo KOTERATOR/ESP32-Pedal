@@ -50,6 +50,7 @@ Layout c(LayoutMode::HORIZONTAL, ContainerSizeMode::MATCH_PARENT, ContainerSizeM
 
 VirtualPotentiometer pot;
 PotentiometerView potView(pot, "TONE");
+PotentiometerView potView2(pot, "VOL");
 Circle circle;
 
 void setup()
@@ -59,6 +60,8 @@ void setup()
     display.init();
     
     c.add(potView);
+    c.add(potView2);
+    potView2.drawBorder = true;
     m.add(c);
     m.calculate();
 }

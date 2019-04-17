@@ -10,6 +10,7 @@ class View : public Container
     ViewGFX gfx;
 
   public:
+    bool drawBorder = false;
     View(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode, Position position, Size size, Layout *parent);
     void setSize(Size size);
     void draw();
@@ -32,6 +33,10 @@ void View::draw()
 {
     gfx.setOffset(this->getAbsolutePosition());
     gfx.clear();
+    if(drawBorder)
+    {
+      gfx.drawRect(0, 0, size.width, size.height, Color::WHITE);
+    }
     onDraw();
     gfx.draw();
 }
