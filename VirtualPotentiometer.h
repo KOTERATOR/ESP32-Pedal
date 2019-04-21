@@ -19,5 +19,13 @@ int VirtualPotentiometer::getValue()
 
 void VirtualPotentiometer::setValue(int value)
 {
+    if(value > 4095)
+    {
+        value = 4095;
+    }
+    else if(value < 0)
+    {
+        value = 0;
+    }
     this->value = value;
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libs/View.h"
+#include "libs/GFX/View.h"
 #include "VirtualPotentiometer.h"
 
 class PotentiometerView : public View
@@ -13,7 +13,7 @@ public:
     void onDraw()
     {
         int r = (32)/2;
-        int x, y = 16;
+        int x, y = 18;
         x = size.width/2;
         gfx.drawCircle(x, y, r, Color::WHITE);
         int angle = -map(pot.getValue(), 0, 4095, 0, 270) - 135;
@@ -22,6 +22,6 @@ public:
         int y1 = (y - (cos(rad) * r));
         gfx.drawLine(x, y, x1, y1, Color::WHITE);
         Size bounds = gfx.getTextBounds(name);
-        gfx.drawText((size.width - bounds.width)/2, size.height - bounds.height, name);
+        gfx.drawText((size.width - bounds.width)/2, size.height - bounds.height-2, name);
     }
 };
