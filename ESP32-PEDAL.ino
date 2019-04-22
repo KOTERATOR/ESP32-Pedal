@@ -10,30 +10,12 @@
 #include "Encoder.h"
 #include "libs/IO/analogWrite.h"
 #include "driver/adc.h"
+#include "driver/dac.h"
 
 
 SSD1306 display(0x3c, 21, 22);
 TaskHandle_t Task1;
 
-void Task1code(void * parameter) 
-{
-    int prevP = 0, prevN = 0, counter = 0;
-    for(;;) {
-      
-        int inp = adc1_get_raw(ADC1_CHANNEL_4);
-        int inn = adc1_get_raw(ADC1_CHANNEL_5);
-        if((prevP == 0 && inp > 0) || (prevN == 0 && inn > 0))
-        {
-            counter++;
-        }
-        prevP = inp;
-        prevN = inn;
-        dacWrite(25, inp*5);
-        //Serial.print(" ");
-        dacWrite(26, inn*5);
-        vTaskDelay(10);
-    }
-}
 
 void printPos(Position pos)
 {
@@ -69,7 +51,10 @@ Layout header(LayoutMode::HORIZONTAL, ContainerSizeMode::MATCH_PARENT, Container
 Layout c(LayoutMode::HORIZONTAL, ContainerSizeMode::WRAP_CONTENT, ContainerSizeMode::WRAP_CONTENT, Position(0, 0), Size(31, 31), ContainerMode::CENTER);
 
 VirtualPotentiometer pot;
+VirtualPotentiometer innPot, inpPot;
 PotentiometerView potView(pot, "VOLUME");
+PotentiometerView innView(innPot, "INN");
+PotentiometerView inpView(inpPot, "INP");
 Header effectHeader("OCTAVER");
 
 int val = 0;
@@ -86,6 +71,26 @@ void onCCW()
 
 Encoder enc(18, 19, onCW, onCCW);
 
+void Task1code(void * parameter) 
+{
+    int prevP = 0, prevN = 0, counter = 0;
+    for(;;) {
+      
+        int inp = adc1_get_raw(ADC1_CHANNEL_4);
+        int inn = adc1_get_raw(ADC1_CHANNEL_5);
+        innPot.setValue(inn);
+        inpPot.setValue(inp);
+        if(inp >= 4094 || inn >= 4094) analogWrite(14, HIGH);
+        //dacWrite(25, inp*5);
+        //Serial.print(" ");
+        //dacWrite(26, inn*5);
+        dac_output_voltage(DAC_CHANNEL_1, inp/16);
+        dac_output_voltage(DAC_CHANNEL_2, inn/16);
+        //vTaskDelay(10);
+    }
+}
+
+
 void setup()
 {
     Serial.begin(115200);
@@ -96,13 +101,19 @@ void setup()
     display.init();
     mainLayout.add(header);
     header.add(effectHeader);
+    c.add(innView);
+    c.add(inpView);
     c.add(potView);
     effectHeader.drawBorder = true;
     mainLayout.add(c);
     mainLayout.calculate();
     digitalWrite(14, true);
     analogWriteResolution(14, 12);
-    adc1_config_width(ADC_WIDTH_BIT_9);
+    dac_output_enable(DAC_CHANNEL_1);
+    dac_output_enable(DAC_CHANNEL_2);
+    dac_output_voltage(DAC_CHANNEL_1, 0);
+    dac_output_voltage(DAC_CHANNEL_2, 0);
+    adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(ADC1_CHANNEL_4,ADC_ATTEN_DB_11);
     adc1_config_channel_atten(ADC1_CHANNEL_5,ADC_ATTEN_DB_11);
     xTaskCreatePinnedToCore(
