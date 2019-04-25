@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libs/GFX/View.h"
+#include "ESP32Pedal/GFX/View.h"
 #include "VirtualPotentiometer.h"
 
 class PotentiometerView : public View
