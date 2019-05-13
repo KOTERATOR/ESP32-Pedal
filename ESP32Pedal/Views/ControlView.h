@@ -1,13 +1,12 @@
 #pragma once
 
-#include "ESP32Pedal/GFX/View.h"
+#include "../ESP32Pedal/GFX/SelectableView.h"
 
-class ControlView : public View
+class ControlView : public SelectableView
 {
 private:
 
 public:
-    virtual void onNext() = 0;
-    virtual void onPrev() = 0;
+
 };
 

@@ -53,7 +53,12 @@ class Container
     ContainerSizeMode getWidthMode() { return widthMode; }
     ContainerSizeMode getHeightMode() { return heightMode; }
 
-
+    virtual void onNext() = 0;
+    virtual void onPrev() = 0;
+    virtual void onSelect() = 0;
+    virtual void onUnselect() = 0;
+    virtual void onHover() = 0;
+    virtual void onUnhover() = 0;
 };
 
 Container::Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode = ContainerMode::NORMAL, Position position = Position(0, 0), Size size = Size(0, 0), Container *parent = nullptr)

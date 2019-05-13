@@ -24,4 +24,14 @@ public:
         Size bounds = gfx.getTextBounds(name);
         gfx.drawText((size.width - bounds.width)/2, size.height - bounds.height-2, name);
     }
+
+    void onNext()
+    {
+        pot.setValue(pot.getValue()+100);
+    }
+
+    void onPrev()
+    {
+        pot.setValue(pot.getValue()-100);
+    }
 };

@@ -4,7 +4,7 @@
 #include "Dimensions.h"
 #include "../Utils/List.h"
 #include "Container.h"
-#include "View.h"
+#include "ViewGFX.h"
 
 enum class LayoutMode
 {
@@ -16,19 +16,29 @@ enum class LayoutMode
 class Layout : public Container
 {
   protected:
+    ViewGFX gfx;
     LayoutMode mode;
-    
-
+    size_t selectedItemIndex = 0;
+    Container * selectedItem = nullptr;
+    Container * prevSelectedItem = nullptr;
   public:
+    bool drawBorder = false;
     List<Container *> children;
     Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position, Size size, ContainerMode containerMode, Layout *parent);
     void add(Container &container);
     void calculate();
     void draw();
     Size getChildrenBounds();
+
+    virtual void onNext();
+    virtual void onPrev();
+    virtual void onSelect();
+    virtual void onUnselect();
+    virtual void onHover();
+    virtual void onUnhover();
 };
 
-Layout::Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position = Position(0, 0), Size size = Size(0, 0), ContainerMode containerMode = ContainerMode::NORMAL, Layout *parent = nullptr) : Container(widthMode, heightMode, containerMode, position, size, parent)
+Layout::Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position = Position(0, 0), Size size = Size(0, 0), ContainerMode containerMode = ContainerMode::NORMAL, Layout *parent = nullptr) : Container(widthMode, heightMode, containerMode, position, size, parent), gfx(size)
 {
     this->parent = parent;
     if (parent != nullptr)
@@ -169,10 +179,96 @@ Size Layout::getChildrenBounds()
 
 void Layout::draw()
 {
+    
     for(int i = 0; i < children.size(); i++)
     {
         children[i]->draw();
     }
+    gfx.setOffset(this->getAbsolutePosition());
+    gfx.clear();
+    if(drawBorder)
+    {
+        gfx.drawRect(0, 0, size.width, size.height, Color::WHITE);
+    }
+    gfx.draw();
+}
+
+void Layout::onSelect()
+{
+    if(selectedItem != nullptr)
+    {
+        selectedItem->onSelect();
+    }
+    else
+    {
+        //prevSelectedItem = selectedItem;
+        selectedItem = children[selectedItemIndex];   
+    }
+}
+
+void Layout::onUnselect()
+{
+    if(selectedItem != nullptr)
+    {
+        selectedItem->onUnselect();
+        selectedItem->onUnhover();
+        if(selectedItem->getParent() == this)
+        {
+            selectedItem = nullptr;
+        }
+        //selectedItem = nullptr;
+    }
+    else
+    {
+        selectedItemIndex = 0;
+        selectedItem = nullptr;
+        ((Layout*)parent)->selectedItem = nullptr;
+    }
+}
+
+void Layout::onNext()
+{
+    if(selectedItem != nullptr)
+    {
+        selectedItem->onNext();
+    }
+    else
+    {
+        if(selectedItemIndex < children.size()-1)
+        {
+            children[selectedItemIndex]->onUnhover();
+            selectedItemIndex++;
+            children[selectedItemIndex]->onHover();
+        }
+    }
+}
+
+void Layout::onPrev()
+{
+    if(selectedItem != nullptr)
+    {
+        selectedItem->onPrev();
+    }
+    else
+    {
+        if(selectedItemIndex > 0)
+        {
+            children[selectedItemIndex]->onUnhover();
+            selectedItemIndex--;
+            children[selectedItemIndex]->onHover();
+        }
+    }
+    
+}
+
+void Layout::onHover()
+{
+    drawBorder = true;
+}
+
+void Layout::onUnhover()
+{
+    drawBorder = false;
 }
 
 #endif

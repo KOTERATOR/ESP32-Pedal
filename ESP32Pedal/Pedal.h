@@ -3,34 +3,27 @@
 #include "../ESP32Pedal/Hardware/Audio.h"
 #include "../ESP32Pedal/Hardware/HardwareTimer.h"
 #include "../ESP32Pedal/Utils/List.h"
+#include "../ESP32Pedal/Hardware/Encoder.h"
 #include "EffectsUnit.h"
 
 class Pedal
 {
 private:
     Audio audio;
-    int sampling_rate = 0;
-    List<EffectsUnit*> effects;
+    int samplingRate = 0;
+    
 
-    int16_t in1 = 0, in2 = 0; 
+    int16_t in1, in2; 
 public:
+    List<EffectsUnit*> effects;
     Pedal(int samplingRate);
     void proceed();
     void getInput();
 };
 
-Pedal * pedal = nullptr;
-
-void onTick(void*)
+Pedal::Pedal(int samplingRate = 12000)
 {
-    TIMERG0.int_clr_timers.t0 = 1;
-    TIMERG0.hw_timer[0].config.alarm_en = 1;
-    pedal->proceed();
-}
-
-Pedal::Pedal(int samplingRate)
-{
-
+    this->samplingRate = samplingRate;
 }
 
 void Pedal::proceed()
@@ -46,4 +39,5 @@ void Pedal::proceed()
 void Pedal::getInput()
 {
     audio.getInput(&in1, &in2);
+    //Serial.println(in);
 }
