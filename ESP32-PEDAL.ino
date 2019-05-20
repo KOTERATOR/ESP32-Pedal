@@ -6,7 +6,7 @@
 #include "ESP32Pedal/Views/Header.h"
 #include "ESP32Pedal/GFX/Layout.h"
 #include "SSD1306.h"
-#include "VirtualPotentiometer.h"
+#include "ESP32Pedal/Controls/VirtualPotentiometer.h"
 #include "PotentiometerView.h"
 #include "ESP32Pedal/Hardware/Encoder.h"
 #include "ESP32Pedal/IO/analogWrite.h"
@@ -19,13 +19,14 @@ TaskHandle_t Task1;
 
 Layout mainLayout(LayoutMode::VERTICAL, ContainerSizeMode::FIXED, ContainerSizeMode::FIXED, Position(0, 0), Size(128, 64));
 Layout header(LayoutMode::HORIZONTAL, ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::WRAP_CONTENT, Position(0, 0));
-Layout c(LayoutMode::HORIZONTAL, ContainerSizeMode::WRAP_CONTENT, ContainerSizeMode::WRAP_CONTENT, Position(0, 0), Size(31, 31), ContainerMode::CENTER);
+Layout c(LayoutMode::HORIZONTAL, ContainerSizeMode::WRAP_CONTENT, ContainerSizeMode::WRAP_CONTENT, Position(0, 0), Size(128, 48));
 
 VirtualPotentiometer pot;
 VirtualPotentiometer innPot, inpPot;
 PotentiometerView potView(pot, "VOLUME");
 PotentiometerView innView(innPot, "INN");
 PotentiometerView inpView(inpPot, "INP");
+PotentiometerView ippView(inpPot, "IPP");
 Header effectHeader("OCTAVER");
 
 Pedal pedal;
@@ -47,6 +48,7 @@ void IRAM_ATTR Task1code(void *parameter)
         mainLayout.draw();
         display.display();
         enc.tick();
+        pedal.controlsTick();
         vTaskDelay(1);
     }
 }
@@ -63,9 +65,12 @@ void setup()
     c.add(innView);
     c.add(inpView);
     c.add(potView);
+    c.add(ippView);
     //effectHeader.drawBorder = true;
     mainLayout.add(c);
     mainLayout.calculate();
+    mainLayout.isSelected = true;
+    header.drawBorder = true;
     digitalWrite(14, true);
     analogWriteResolution(14, 12);
     //c.drawBorder = true;

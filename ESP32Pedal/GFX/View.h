@@ -6,43 +6,61 @@
 class View : public Container
 {
   protected:
-    ViewGFX gfx;
+
     bool isSelectable = true;
   public:
-    
-    bool drawBorder = false;
+    bool drawBorder = false, isSelected = false;
     View(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode, Position position, Size size, Container *parent);
-    void setSize(Size size);
     void draw();
     void calculate() {}
     virtual void onDraw() = 0;
     virtual void onHover();
     virtual void onUnhover();
     virtual void onSelect();
-    virtual void onUnselect();
+    virtual bool onUnselect();
     virtual void onNext();
     virtual void onPrev();
+
+    bool isView() { return true; }
 };
 
-View::View(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode = ContainerMode::NORMAL, Position position = Position(0, 0), Size size = Size(0, 0), Container *parent = nullptr) : Container(widthMode, heightMode, containerMode, position, size, parent), gfx(size)
+View::View(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode = ContainerMode::NORMAL, Position position = Position(0, 0), Size size = Size(0, 0), Container *parent = nullptr) : Container(widthMode, heightMode, containerMode, position, size, parent)
 {
 
-}
-
-void View::setSize(Size size)
-{
-    Container::setSize(size);
-    gfx.setSize(size);
 }
 
 void View::draw()
 {
     gfx.setOffset(this->getAbsolutePosition());
     gfx.clear();
-    if(drawBorder)
+    if(isSelected)
     {
-      gfx.drawRect(0, 0, size.width, size.height, Color::WHITE);
+        gfx.drawRect(0, 0, size.width, size.height, Color::WHITE);
     }
+    else if(drawBorder)
+    {
+        for(int i = 0; i < size.width; i++)
+        {
+            for(int j = 0; j < size.height; j++)
+            {
+                if(j == 0 || j == size.height-1)
+                {
+                    if(i % 2 == 0)
+                    {
+                        gfx.drawPixel(i, j, Color::WHITE);
+                    }
+                }
+                else if(i == 0 || i == size.width-1)
+                {
+                    if(j % 2 == 0)
+                    {
+                        gfx.drawPixel(i, j, Color::WHITE);
+                    }
+                }
+            }
+        }
+    }
+    
     onDraw();
     gfx.draw();
 }
@@ -59,12 +77,13 @@ void View::onUnhover()
 
 void View::onSelect()
 {
-    drawBorder = true;
+    isSelected = true;
 }
 
-void View::onUnselect()
+bool View::onUnselect()
 {
-    drawBorder = false;
+    isSelected = false;
+    return true;
 }
 
 void View::onNext()

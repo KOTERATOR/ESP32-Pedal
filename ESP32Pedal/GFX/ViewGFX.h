@@ -99,6 +99,7 @@ void ViewGFX::draw()
                     }
                     display_ptr->setColor(color);
                     display_ptr->setPixel(offset.x + x, offset.y + y);
+                    
                 }
             }
         }

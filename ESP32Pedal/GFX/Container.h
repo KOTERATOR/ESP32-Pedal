@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Dimensions.h"
+#include "ViewGFX.h"
 
 enum class ContainerSizeMode
 {
@@ -29,6 +30,8 @@ class Container
     Position position;
     Size size;
 
+    ViewGFX gfx;
+
   public:
     Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode, Position position, Size size, Container *parent);
 
@@ -46,9 +49,10 @@ class Container
     virtual void setSize(Size size);
 
     Container *getParent();
+    Container * getAbsoluteParent();
     void setParent(Container *parent);
     virtual void calculate() = 0;
-    virtual void draw() = 0;
+    virtual void draw();
 
     ContainerSizeMode getWidthMode() { return widthMode; }
     ContainerSizeMode getHeightMode() { return heightMode; }
@@ -56,12 +60,14 @@ class Container
     virtual void onNext() = 0;
     virtual void onPrev() = 0;
     virtual void onSelect() = 0;
-    virtual void onUnselect() = 0;
+    virtual bool onUnselect() = 0;
     virtual void onHover() = 0;
     virtual void onUnhover() = 0;
+
+    virtual void onDraw() = 0;
 };
 
-Container::Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode = ContainerMode::NORMAL, Position position = Position(0, 0), Size size = Size(0, 0), Container *parent = nullptr)
+Container::Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode = ContainerMode::NORMAL, Position position = Position(0, 0), Size size = Size(0, 0), Container *parent = nullptr) : gfx(size)
 {
     this->parent = parent;
     this->widthMode = widthMode;
@@ -69,6 +75,14 @@ Container::Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, 
     this->position = position;
     this->size = size;
     this->containerMode = containerMode;
+}
+
+void Container::draw()
+{
+    gfx.setOffset(this->getAbsolutePosition());
+    gfx.clear();
+    onDraw();
+    //gfx.draw();
 }
 
 Position Container::getPosition()
@@ -111,11 +125,24 @@ Size & Container::getReferenceSize()
 void Container::setSize(Size size)
 {
     this->size = size;
+    gfx.setSize(size);
 }
 
 Container *Container::getParent()
 {
     return parent;
+}
+
+Container * Container::getAbsoluteParent()
+{
+    if(parent != nullptr)
+    {
+        return parent->getAbsoluteParent();
+    }
+    else
+    {
+        return this;
+    }
 }
 
 void Container::setParent(Container *parent)

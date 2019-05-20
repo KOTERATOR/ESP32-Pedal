@@ -14,6 +14,7 @@ typedef enum {
 class Audio
 {
 private:
+    portMUX_TYPE rtc_spinlock = portMUX_INITIALIZER_UNLOCKED;
     void adc_set_controller(adc_unit_t unit, adc_controller_t ctrl);
     int adc_convert(int channel);
 public:
@@ -46,8 +47,10 @@ void Audio::getInput(int16_t * in1, int16_t * in2)
     //(*in2) = adc1_get_raw(ADC1_CHANNEL_5);
     //(*in1) = analogRead(32);
     //(*in2) = analogRead(33);
+    portENTER_CRITICAL(&rtc_spinlock);
     (*in1) = adc_convert(ADC1_CHANNEL_4);
     (*in2) = adc_convert(ADC1_CHANNEL_5);
+    portEXIT_CRITICAL(&rtc_spinlock);
 }
 
 void Audio::output(int16_t out1, int16_t out2)

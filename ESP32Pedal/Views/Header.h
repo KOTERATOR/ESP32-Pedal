@@ -17,16 +17,6 @@ class Header : public View
         //gfx.drawText(0, 8, name, Color::WHITE);
     }
 
-    void onSelect()
-    {
-        drawBorder = true;
-    }
-
-    void onUnselect()
-    {
-        drawBorder = false;
-    }
-
     void onNext()
     {
 

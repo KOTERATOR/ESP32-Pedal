@@ -15,30 +15,33 @@ enum class LayoutMode
 
 class Layout : public Container
 {
-  protected:
-    ViewGFX gfx;
+protected:
+    Position defaultPosition;
     LayoutMode mode;
     size_t selectedItemIndex = 0;
-    Container * selectedItem = nullptr;
-    Container * prevSelectedItem = nullptr;
-  public:
+    Container *selectedItem = nullptr;
+    Container *prevSelectedItem = nullptr;
+
+public:
     bool drawBorder = false;
+    bool isSelected = false;
     List<Container *> children;
     Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position, Size size, ContainerMode containerMode, Layout *parent);
     void add(Container &container);
     void calculate();
-    void draw();
+    void onDraw();
     Size getChildrenBounds();
 
     virtual void onNext();
     virtual void onPrev();
     virtual void onSelect();
-    virtual void onUnselect();
+    virtual bool onUnselect();
     virtual void onHover();
     virtual void onUnhover();
+    void centerSelectedItem();
 };
 
-Layout::Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position = Position(0, 0), Size size = Size(0, 0), ContainerMode containerMode = ContainerMode::NORMAL, Layout *parent = nullptr) : Container(widthMode, heightMode, containerMode, position, size, parent), gfx(size)
+Layout::Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position = Position(0, 0), Size size = Size(0, 0), ContainerMode containerMode = ContainerMode::NORMAL, Layout *parent = nullptr) : Container(widthMode, heightMode, containerMode, position, size, parent), defaultPosition(position)
 {
     this->parent = parent;
     if (parent != nullptr)
@@ -117,11 +120,11 @@ void Layout::calculate()
                 maxW = w;
             }
         }
-        if(childMode == ContainerMode::CENTER)
+        if (childMode == ContainerMode::CENTER)
         {
-            int x = (size.width - cW)/2, y = (size.height - cH)/2;
+            int x = (size.width - cW) / 2, y = (size.height - cH) / 2;
             Position childPos = c->getPosition();
-            if(mode == LayoutMode::HORIZONTAL)
+            if (mode == LayoutMode::HORIZONTAL)
             {
                 x = childPos.x;
             }
@@ -129,6 +132,7 @@ void Layout::calculate()
             {
                 y = childPos.y;
             }
+
             c->setPosition(Position(x, y));
         }
     }
@@ -177,98 +181,178 @@ Size Layout::getChildrenBounds()
     return Size(maxW, maxH);
 }
 
-void Layout::draw()
+void Layout::onDraw()
 {
-    
-    for(int i = 0; i < children.size(); i++)
+    for (int i = 0; i < children.size(); i++)
     {
         children[i]->draw();
+        
     }
-    gfx.setOffset(this->getAbsolutePosition());
-    gfx.clear();
+    
     if(drawBorder)
     {
-        gfx.drawRect(0, 0, size.width, size.height, Color::WHITE);
+        for(int i = 0; i < size.width; i++)
+        {
+            for(int j = 0; j < size.height; j++)
+            {
+                if(j == 0 || j == size.height-1)
+                {
+                    if(i % 4 == 0)
+                    {
+                        gfx.drawPixel(i, j, Color::WHITE);
+                        //Serial.println("WWWW");
+                    }
+                }
+                else if(i == 0 || i == size.width-1)
+                {
+                    if(j % 4 == 0)
+                    {
+                        gfx.drawPixel(i, j, Color::WHITE);
+                    }
+                }
+            }
+        }
     }
     gfx.draw();
 }
 
 void Layout::onSelect()
 {
-    if(selectedItem != nullptr)
+    if (selectedItem != nullptr)
     {
         selectedItem->onSelect();
     }
     else
     {
-        //prevSelectedItem = selectedItem;
-        selectedItem = children[selectedItemIndex];   
+        if (!isSelected)
+        {
+            children[0]->onHover();
+            centerSelectedItem();
+            isSelected = true;
+        }
+        else
+        {
+            selectedItem = children[selectedItemIndex];
+            selectedItem->onSelect();
+        }
     }
 }
 
-void Layout::onUnselect()
+bool Layout::onUnselect()
 {
-    if(selectedItem != nullptr)
+    if (selectedItem != nullptr)
     {
-        selectedItem->onUnselect();
-        selectedItem->onUnhover();
-        if(selectedItem->getParent() == this)
+        if (selectedItem->onUnselect())
         {
+            //selectedItem->onUnhover();
             selectedItem = nullptr;
         }
-        //selectedItem = nullptr;
+        return false;
     }
     else
     {
+        children[selectedItemIndex]->onUnhover();
         selectedItemIndex = 0;
+        centerSelectedItem();
         selectedItem = nullptr;
-        ((Layout*)parent)->selectedItem = nullptr;
+        isSelected = false;
+        //setAbsolutePosition(defaultPosition);
+        return true;
     }
 }
 
 void Layout::onNext()
 {
-    if(selectedItem != nullptr)
+    if (selectedItem != nullptr)
     {
         selectedItem->onNext();
     }
     else
     {
-        if(selectedItemIndex < children.size()-1)
+        if (selectedItemIndex < children.size() - 1)
         {
             children[selectedItemIndex]->onUnhover();
             selectedItemIndex++;
             children[selectedItemIndex]->onHover();
+            centerSelectedItem();
         }
     }
 }
 
 void Layout::onPrev()
 {
-    if(selectedItem != nullptr)
+    if (selectedItem != nullptr)
     {
         selectedItem->onPrev();
     }
     else
     {
-        if(selectedItemIndex > 0)
+        if (selectedItemIndex > 0)
         {
             children[selectedItemIndex]->onUnhover();
             selectedItemIndex--;
             children[selectedItemIndex]->onHover();
+            centerSelectedItem();
         }
     }
-    
 }
 
 void Layout::onHover()
 {
-    drawBorder = true;
+    if (selectedItem != nullptr)
+    {
+        selectedItem->onHover();
+    }
+    else
+    {
+        drawBorder = true;
+    }
 }
 
 void Layout::onUnhover()
 {
-    drawBorder = false;
+    if (selectedItem != nullptr)
+    {
+        selectedItem->onUnhover();
+    }
+    else
+    {
+        drawBorder = false;
+    }
+}
+
+void Layout::centerSelectedItem()
+{
+    Container *child = children[selectedItemIndex];
+    Container *absoluteParent = getAbsoluteParent();
+    if (mode == LayoutMode::HORIZONTAL)
+    {
+        //setX(64 - children[selectedItemIndex]->getPosition().x - children[selectedItemIndex]->getSize().width / 2);
+        if (child->getAbsolutePosition().x + child->getSize().width > 128)
+        {
+            int val = this->getPosition().x - (child->getAbsolutePosition().x + child->getSize().width - 128);
+            this->setX(val);
+        }
+        else if (child->getAbsolutePosition().x < 0)
+        {
+            int val = this->getPosition().x - child->getAbsolutePosition().x;
+            this->setX(val);
+        }
+    }
+    else if (mode == LayoutMode::VERTICAL)
+    {
+        //setY(32 - children[selectedItemIndex]->getPosition().y - children[selectedItemIndex]->getSize().height / 2);
+        if (child->getAbsolutePosition().y + child->getSize().height > 64)
+        {
+            int val = absoluteParent->getPosition().y - (child->getAbsolutePosition().y + child->getSize().height - 64);
+            absoluteParent->setY(val);
+        }
+        else if (child->getAbsolutePosition().y < 0)
+        {
+            int val = absoluteParent->getPosition().y - child->getAbsolutePosition().y;
+            absoluteParent->setY(val);
+        }
+    }
 }
 
 #endif

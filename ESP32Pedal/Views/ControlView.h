@@ -1,12 +1,16 @@
 #pragma once
 
-#include "../ESP32Pedal/GFX/SelectableView.h"
+#include "../GFX/View.h"
+#include "../EffectsUnit.h"
 
-class ControlView : public SelectableView
+class ControlView : public View
 {
 private:
 
 public:
-
+    ControlView(EffectsUnit * effectsUnit) : View(ContainerSizeMode::WRAP_CONTENT, ContainerSizeMode::WRAP_CONTENT, ContainerMode::NORMAL, Position(0, 0), Size(48, 48))
+    {
+        effectsUnit->controls.add(this);
+    }
 };
 
