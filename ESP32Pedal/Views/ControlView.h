@@ -5,8 +5,6 @@
 
 class ControlView : public View
 {
-private:
-
 public:
     ControlView(EffectsUnit * effectsUnit) : View(ContainerSizeMode::WRAP_CONTENT, ContainerSizeMode::WRAP_CONTENT, ContainerMode::NORMAL, Position(0, 0), Size(48, 48))
     {

@@ -228,6 +228,11 @@ void Layout::onSelect()
         {
             children[0]->onHover();
             centerSelectedItem();
+            if(children.size() == 1)
+            {
+                selectedItem = children[0];
+                selectedItem->onSelect();
+            }
             isSelected = true;
         }
         else
@@ -246,6 +251,10 @@ bool Layout::onUnselect()
         {
             //selectedItem->onUnhover();
             selectedItem = nullptr;
+            if(children.size() == 1)
+            {
+                return this->onUnselect();
+            }
         }
         return false;
     }

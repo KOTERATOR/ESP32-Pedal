@@ -1,14 +1,16 @@
 #pragma once
 
-#include "Views/ControlView.h"
 #include "Utils/List.h"
+
+class ControlView;
 
 class EffectsUnit
 {
 public:
     List<ControlView*> controls;
+    String name;
 
-    EffectsUnit() {}
+    EffectsUnit(String name) : name(name) {}
 
     bool bypass = false;
 
