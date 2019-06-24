@@ -9,9 +9,10 @@ private:
     PotentiometerView gain = PotentiometerView(this, "GAIN");
 public:
     Fuzz() : EffectsUnit("FUZZ") {}
-    void processing(int16_t * in1, int16_t * in2)
+    void processing(int16_t * out1, int16_t * out2)
     {
-        (*in1) *= gain.getValue()/10;
-        (*in2) *= gain.getValue()/10;
+        int gainK = 1 + gain.getValue()/100;
+        (*out1) *= gainK;
+        (*out2) *= gainK;
     }
 };

@@ -4,9 +4,9 @@ class VirtualPotentiometer
 {
 private:
     int value;
-
 public:
     int getValue();
+    float getRangedValue();
     void setValue(int value);
 
     virtual void tick() {}
@@ -28,4 +28,9 @@ void VirtualPotentiometer::setValue(int value)
         value = 0;
     }
     this->value = value;
+}
+
+float VirtualPotentiometer::getRangedValue()
+{
+    return ((float)value)/4095.0;
 }

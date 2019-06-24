@@ -13,6 +13,20 @@ public:
     INVERSE = 2;
 };
 
+enum class HTextAlignment
+{
+    Left,
+    Right,
+    Center
+};
+
+enum class VTextAlignment
+{
+    Top,
+    Bottom,
+    Center
+};
+
 class ViewGFX : public Adafruit_GFX
 {
   protected:
@@ -35,7 +49,8 @@ class ViewGFX : public Adafruit_GFX
 
     void drawPixel(int16_t x, int16_t y, uint16_t color);
     void drawText(int16_t x, int16_t y, String str, int16_t color = Color::WHITE, int8_t textSize = 1);
-    Size getTextBounds(String str);
+    void drawAlignedText(HTextAlignment hmode, VTextAlignment vmode, String str, int16_t color, int8_t textSize = 1);
+    Size getTextBounds(String str, uint8_t textSize = 1);
 
     Size getSize() { return size; }
     void setSize(Size size);
@@ -152,13 +167,14 @@ void ViewGFX::drawText(int16_t x, int16_t y, String str, int16_t color, int8_t t
     }
 }
 
-Size ViewGFX::getTextBounds(String str)
+Size ViewGFX::getTextBounds(String str, uint8_t textSize)
 {
     int16_t x1, y1;
     uint16_t w, h;
     int len = str.length()+1;
     char * text = new char[len];
     str.toCharArray(text, len);
+    Adafruit_GFX::setTextSize(textSize);
     Adafruit_GFX::getTextBounds((char*)text, 0, 0, &x1, &y1, &w, &h);
     delete [] text;
     return Size(w, h);

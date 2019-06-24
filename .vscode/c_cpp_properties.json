@@ -4,7 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "C:\\Users\\iashi\\Documents\\Arduino\\hardware\\espressif\\esp32\\**",
-                "C:\\Program Files(x86)\\Arduino\\libraries\\**"
+                "E:\\Developing 2k\\Arduino\\libraries\\**",
+                "C:\\Users\\iashi\\Documents\\Arduino\\libraries\\**"
             ],
             "forcedInclude": [],
             "cStandard": "c11"

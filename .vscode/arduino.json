@@ -1,6 +1,7 @@
 {
     "board": "espressif:esp32:esp32",
     "configuration": "PartitionScheme=default,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none",
-    "port": "COM5",
-    "sketch": "ESP32-PEDAL.ino"
+    "port": "192.168.0.40",
+    "sketch": "ESP32-PEDAL.ino",
+    "output": "../ArduinoOutput"
 }

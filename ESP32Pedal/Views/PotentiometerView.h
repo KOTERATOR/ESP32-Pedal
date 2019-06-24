@@ -7,7 +7,10 @@ class PotentiometerView : public ControlView, public VirtualPotentiometer
 {
 public:
     String name;
-    PotentiometerView(EffectsUnit * unit, String name) : ControlView(unit), VirtualPotentiometer(), name(name) {}
+    PotentiometerView(EffectsUnit * unit, String name, int value = 0) : ControlView(unit), name(name)
+    {
+        setValue(value);
+    }
 
     void onDraw()
     {

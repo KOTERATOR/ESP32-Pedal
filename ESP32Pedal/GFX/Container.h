@@ -47,6 +47,8 @@ class Container
     Size getSize();
     Size & getReferenceSize();
     virtual void setSize(Size size);
+    void setWidth(int width) { setSize(Size(width, size.height)); }
+    void setHeight(int height) { setSize(Size(size.width, height)); }
 
     Container *getParent();
     Container * getAbsoluteParent();
