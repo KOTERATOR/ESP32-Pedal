@@ -30,14 +30,14 @@ public:
     }
     float getValue() { return value; }
 
-    void onDraw()
+    void onDraw(ViewGFX * gfx)
     {
         //gfx.fillRect(0, 0, size.width, size.height, Color::BLACK);
-        gfx.drawRect(0, 0, size.width, size.height, Color::WHITE);
+        gfx->drawRect(0, 0, size.width, size.height, Color::WHITE);
         int pixels = (size.width * value)/100.0;
         for(int i = 0; i < pixels; i++)
         {
-            gfx.drawLine(i, 0, i, size.height, Color::WHITE);
+            gfx->drawLine(i, 0, i, size.height, Color::WHITE);
         }
         //gfx.drawAlignedText(HTextAlignment::Left, VTextAlignment::Top, (String(value)+"%"), Color::WHITE, 2);
     }

@@ -1,12 +1,7 @@
 #pragma once
 
 #include "../GFX/Activity.h"
-#include "../GFX/Layout.h"
 #include "../Pedal.h"
-#include "../Views/Header.h"
-#include "../Views/Label.h"
-#include "../Views/ProgressBar.h"
-#include "../Views/Spacer.h"
 
 const unsigned char bitmap [] PROGMEM=
 {
@@ -88,10 +83,10 @@ public:
         
     }
 
-    void onDraw()
+    void onDraw(ViewGFX * gfx)
     {
-        gfx.drawBitmap(0, 0, bitmap, 128, 64, Color::WHITE);
-        Activity::onDraw();    
+        gfx->drawBitmap(0, 0, bitmap, 128, 64, Color::WHITE);
+        Activity::onDraw(gfx);    
     }
 
     

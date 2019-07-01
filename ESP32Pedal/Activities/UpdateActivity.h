@@ -30,9 +30,9 @@ public:
         add(pbar);
     }
 
-    void onDraw()
+    void onDraw(ViewGFX * gfx)
     {
-        Activity::onDraw();
+        Activity::onDraw(gfx);
         progressLabel.text = String(pbar.getValue()) + "%";
     }
 

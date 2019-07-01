@@ -70,6 +70,10 @@ List<T>::List(T *array, size_t length)
 template <class T>
 List<T>::~List()
 {
+	for(int i = size()-1; i >= 0; i--)
+	{
+		removeAt(i);
+	}
 }
 
 template <class T>
@@ -193,6 +197,7 @@ bool List<T>::removeAt(size_t index)
 			ListNode<T> *prevNode = getNode(index - 1);
 			prevNode->next = nextNode;
 		}
+		delete indexNode;
 		_size--;
 		return true;
 	}

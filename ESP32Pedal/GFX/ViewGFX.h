@@ -3,14 +3,15 @@
 #include "Dimensions.h"
 #include "SSD1306.h"
 #include "Adafruit_GFX.h"
+#include "Container.h"
 
 class Color
 {
 public:
     static const int TRANSPARENT = 3,
-    BLACK = 0,
-    WHITE = 1,
-    INVERSE = 2;
+                     BLACK = 0,
+                     WHITE = 1,
+                     INVERSE = 2;
 };
 
 enum class HTextAlignment
@@ -29,14 +30,16 @@ enum class VTextAlignment
 
 class ViewGFX : public Adafruit_GFX
 {
-  protected:
+protected:
     int8_t **buffer;
     Size size;
     Position offset;
+    Container * currentContainer;
+    bool isDisposed = false;
 
     static SSD1306 *display_ptr;
 
-  public:
+public:
     ViewGFX(Size size);
     ~ViewGFX();
 
@@ -48,9 +51,14 @@ class ViewGFX : public Adafruit_GFX
     void clear();
 
     void drawPixel(int16_t x, int16_t y, uint16_t color);
-    void drawText(int16_t x, int16_t y, String str, int16_t color = Color::WHITE, int8_t textSize = 1);
-    void drawAlignedText(HTextAlignment hmode, VTextAlignment vmode, String str, int16_t color, int8_t textSize = 1);
-    Size getTextBounds(String str, uint8_t textSize = 1);
+    void drawText(int16_t x, int16_t y, String &str, int16_t color = Color::WHITE, int8_t textSize = 1);
+    void drawAlignedText(HTextAlignment hmode, VTextAlignment vmode, String &str, int16_t color, int8_t textSize = 1);
+    Size getTextBounds(String & str, uint8_t textSize = 1);
+
+    void setCurrentContainer(Container * c)
+    {
+        currentContainer = c;
+    }
 
     Size getSize() { return size; }
     void setSize(Size size);
@@ -64,6 +72,8 @@ SSD1306 *ViewGFX::display_ptr;
 ViewGFX::ViewGFX(Size size) : Adafruit_GFX(size.width, size.height)
 {
     this->size = size;
+    Serial.println("ViewGFX ctor");
+    Serial.println(ESP.getFreeHeap());
     buffer = new int8_t *[size.width];
     for (int i = 0; i < size.width; i++)
     {
@@ -78,9 +88,18 @@ ViewGFX::ViewGFX(Size size) : Adafruit_GFX(size.width, size.height)
 
 ViewGFX::~ViewGFX()
 {
+    if(!isDisposed)
+    {
+    isDisposed = true;
+    Serial.println("ViewGFX dtor");
+    Serial.print(size.width); Serial.print(" "); Serial.println(size.height);
+    auto he = ESP.getFreeHeap();
     for (int i = 0; i < width(); i++)
     {
-        delete[] buffer[i];
+        delete[] (buffer[i]);
+    }
+    delete [] buffer;
+    Serial.println("Deallocated - " + String(ESP.getFreeHeap()-he));
     }
 }
 
@@ -91,7 +110,7 @@ void ViewGFX::setDisplay(SSD1306 *display)
 
 void ViewGFX::draw()
 {
-    if (display_ptr != nullptr)
+    if (display_ptr != nullptr && !isDisposed)
     {
         for (int x = 0; x < size.width; x++)
         {
@@ -100,21 +119,20 @@ void ViewGFX::draw()
                 if (buffer[x][y] != Color::TRANSPARENT)
                 {
                     OLEDDISPLAY_COLOR color;
-                    if(buffer[x][y] == Color::BLACK)
+                    if (buffer[x][y] == Color::BLACK)
                     {
                         color = BLACK;
                     }
-                    else if(buffer[x][y] == Color::WHITE)
+                    else if (buffer[x][y] == Color::WHITE)
                     {
                         color = WHITE;
                     }
-                    else if(buffer[x][y] == Color::INVERSE)
+                    else if (buffer[x][y] == Color::INVERSE)
                     {
                         color = INVERSE;
                     }
                     display_ptr->setColor(color);
                     display_ptr->setPixel(offset.x + x, offset.y + y);
-                    
                 }
             }
         }
@@ -123,69 +141,119 @@ void ViewGFX::draw()
 
 void ViewGFX::clear()
 {
-    for (int x = 0; x < size.width; x++)
+    if(!isDisposed)
     {
-        for (int y = 0; y < size.height; y++)
+        for (int x = 0; x < size.width; x++)
         {
-            buffer[x][y] = Color::TRANSPARENT;
+            for (int y = 0; y < size.height; y++)
+            {
+                buffer[x][y] = Color::TRANSPARENT;
+            }
         }
     }
 }
 
 void ViewGFX::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
-    if (x >= 0 && x < this->width() && y >= 0 && y < this->height())
+    if(currentContainer != nullptr)
     {
-        switch(color)
+        Size ccSize = currentContainer->getSize();
+        if (x >= 0 && x < ccSize.width && y >= 0 && y < ccSize.height && !isDisposed)
         {
-            case Color::BLACK:
-                buffer[x][y] = Color::BLACK;
-                break;
-            case Color::WHITE:
-                buffer[x][y] = Color::WHITE;
-                break;
-            case Color::INVERSE:
-                buffer[x][y] = Color::INVERSE;
-                break;
-            case Color::TRANSPARENT:
-            default:
-                buffer[x][y] = Color::TRANSPARENT;
-                break;
+            Position ccPos = currentContainer->getAbsolutePosition();
+            x += ccPos.x;
+            y += ccPos.y;
+            if (x >= 0 && x < this->width() && y >= 0 && y < this->height())
+            {
+                switch (color)
+                {
+                case Color::BLACK:
+                    buffer[x][y] = Color::BLACK;
+                    break;
+                case Color::WHITE:
+                    buffer[x][y] = Color::WHITE;
+                    break;
+                case Color::INVERSE:
+                    buffer[x][y] = Color::INVERSE;
+                    break;
+                case Color::TRANSPARENT:
+                default:
+                    buffer[x][y] = Color::TRANSPARENT;
+                    break;
+                }
+            }
         }
     }
 }
 
-void ViewGFX::drawText(int16_t x, int16_t y, String str, int16_t color, int8_t textSize)
+void ViewGFX::drawText(int16_t x, int16_t y, String &str, int16_t color, int8_t textSize)
 {
     setCursor(x, y);
     setTextSize(textSize);
     setTextColor(color);
-    
-    for(int i = 0; i < str.length(); i++)
+
+    for (int i = 0; i < str.length(); i++)
     {
         write(str[i]);
     }
 }
 
-Size ViewGFX::getTextBounds(String str, uint8_t textSize)
+void ViewGFX::drawAlignedText(HTextAlignment hmode, VTextAlignment vmode, String &str, int16_t color, int8_t textSize)
+{
+    int16_t x1 = 0, y1 = 0;
+    Size bounds = getTextBounds(str, textSize);
+    Size size = this->size;
+    if(currentContainer != nullptr)
+    {
+        size = currentContainer->getSize();
+    }
+    if (hmode == HTextAlignment::Left)
+    {
+        x1 = 0;
+    }
+    else if (hmode == HTextAlignment::Right)
+    {
+        x1 = size.width - bounds.width;
+    }
+    else if (hmode == HTextAlignment::Center)
+    {
+        x1 = (size.width - bounds.width) / 2;
+    }
+
+    if (vmode == VTextAlignment::Top)
+    {
+        y1 = 0;
+    }
+    else if (vmode == VTextAlignment::Bottom)
+    {
+        y1 = size.height - bounds.height;
+    }
+    else if (vmode == VTextAlignment::Center)
+    {
+        y1 = (size.height - bounds.height) / 2;
+    }
+    drawText(x1, y1, str, color, textSize);
+}
+
+Size ViewGFX::getTextBounds(String & str, uint8_t textSize)
 {
     int16_t x1, y1;
     uint16_t w, h;
-    int len = str.length()+1;
-    char * text = new char[len];
+    int len = str.length() + 1;
+    char *text = new char[len];
     str.toCharArray(text, len);
     Adafruit_GFX::setTextSize(textSize);
-    Adafruit_GFX::getTextBounds((char*)text, 0, 0, &x1, &y1, &w, &h);
-    delete [] text;
+    Adafruit_GFX::getTextBounds((char *)text, 0, 0, &x1, &y1, &w, &h);
+    delete[] text;
     return Size(w, h);
 }
 
 void ViewGFX::setSize(Size size)
 {
-    for (int i = 0; i < width(); i++)
-    {
-        delete[] buffer[i];
-    }
+        for (int i = 0; i < width(); i++)
+        {
+            delete [] buffer[i];
+        }
 
     this->size = size;
 

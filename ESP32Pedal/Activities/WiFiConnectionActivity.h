@@ -30,9 +30,9 @@ public:
         add(ssidLabel);
     }
 
-    void onDraw()
+    void onDraw(ViewGFX * gfx)
     {
-        Activity::onDraw();
+        Activity::onDraw(gfx);
     }
 
     void onConnect(const String & ipAddress)
@@ -53,7 +53,7 @@ public:
         connectingLabel.text = "Failed to Connect!";
         ssidLabel.text = "...";
         pedal.draw();
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i++)
         {
             if (i % 2 == 0)
             {

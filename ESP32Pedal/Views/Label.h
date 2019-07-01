@@ -18,10 +18,10 @@ public:
         this->color = color;
     }
 
-    void onDraw()
+    void onDraw(ViewGFX * gfx)
     {
         int16_t x1 = 0, y1 = 0;
-        Size bounds = gfx.getTextBounds(text, textSize);
+        Size bounds = gfx->getTextBounds(text, textSize);
         if(horizontalAlignment == HTextAlignment::Left)
         {
             x1 = 0;
@@ -47,7 +47,7 @@ public:
         {
             y1 = (size.height - bounds.height)/2;
         }
-        gfx.drawText(x1, y1, text, color, textSize);
+        gfx->drawText(x1, y1, text, color, textSize);
         //Size bounds = gfx.getTextBounds(text);
         //gfx.drawText((size.width - bounds.width) / 2, (size.height - bounds.height) / 2 + 1, text, Color::WHITE);
         //gfx.drawText(0, 10, text, color, textSize);

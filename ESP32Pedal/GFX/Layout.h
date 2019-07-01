@@ -29,7 +29,8 @@ public:
     Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position, Size size, ContainerMode containerMode, Layout *parent);
     void add(Container &container);
     void calculate();
-    void onDraw();
+    void draw(ViewGFX * gfx);
+    void onDraw(ViewGFX * gfx);
     Size getChildrenBounds();
 
     virtual void onNext();
@@ -39,6 +40,12 @@ public:
     virtual void onHover();
     virtual void onUnhover();
     void centerSelectedItem();
+
+    ~Layout()
+    {
+        children.~List();
+    }
+
 };
 
 Layout::Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position = Position(0, 0), Size size = Size(0, 0), ContainerMode containerMode = ContainerMode::NORMAL, Layout *parent = nullptr) : Container(widthMode, heightMode, containerMode, position, size, parent), defaultPosition(position)
@@ -181,16 +188,24 @@ Size Layout::getChildrenBounds()
     return Size(maxW, maxH);
 }
 
-void Layout::onDraw()
+void Layout::draw(ViewGFX * gfx)
+{
+    gfx->setCurrentContainer(this);
+    this->onDraw(gfx);
+}
+
+void Layout::onDraw(ViewGFX * gfx)
 {
     for (int i = 0; i < children.size(); i++)
     {
-        children[i]->draw();
+        gfx->setCurrentContainer(children[i]);
+        children[i]->draw(gfx);
         
     }
     
     if(drawBorder)
     {
+        gfx->setCurrentContainer(this);
         for(int i = 0; i < size.width; i++)
         {
             for(int j = 0; j < size.height; j++)
@@ -199,7 +214,7 @@ void Layout::onDraw()
                 {
                     if(i % 4 == 0)
                     {
-                        gfx.drawPixel(i, j, Color::WHITE);
+                        gfx->drawPixel(i, j, Color::WHITE);
                         //Serial.println("WWWW");
                     }
                 }
@@ -207,13 +222,12 @@ void Layout::onDraw()
                 {
                     if(j % 4 == 0)
                     {
-                        gfx.drawPixel(i, j, Color::WHITE);
+                        gfx->drawPixel(i, j, Color::WHITE);
                     }
                 }
             }
         }
     }
-    gfx.draw();
 }
 
 void Layout::onSelect()

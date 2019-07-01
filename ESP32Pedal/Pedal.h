@@ -7,12 +7,13 @@
 #include "Hardware/Potentiometer.h"
 #include "GFX/Screen.h"
 #include "EffectsUnit.h"
-#include "Activities/EffectActivity.h"
 #include "Activities/UpdateActivity.h"
 #include "Effects/Fuzz.h"
 #include "Effects/Delay.h"
 #include "Effects/Octaver.h"
 #include "GFX/Screen.h"
+#include "Preset.h"
+
 
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
@@ -26,8 +27,11 @@ private:
     hw_timer_t * timer = NULL;
     Audio audio;
     
-    Octaver delay_effect = Octaver();
-    EffectActivity mainActivity = EffectActivity(&delay_effect);
+    
+
+    Fuzz fuzz = Fuzz();
+    Delay delay = Delay();
+    //EffectActivity mainActivity = EffectActivity(&delay_effect);
 
     static int samplingRate;
     int16_t in1 = 0, in2 = 0; 
@@ -40,11 +44,14 @@ private:
     // OTA
     bool otaEnabled = true;
 
+    int8_t ledValue = 0;
 
     // WiFi (todo : replace with settings)
-
+    //Activity * currentActivity = nullptr;
 
 public:
+    Preset * preset = new Preset("DELAYED FUZZ");
+    Event<> onStartup;
     List<EffectsUnit*> effects;
     Pedal();
 
@@ -64,16 +71,45 @@ public:
     {
         screen.setActivity(activity);
     }
+    
+    void intent(Activity * activity)
+    {
+        screen.intent(activity);
+    }
+    /*void intent(Activity activity)
+    {
+        if(currentActivity != nullptr)
+        {
+            delete currentActivity;
+        }
+        currentActivity = new Activity(activity);
+        screen.setActivity(currentActivity);
+    }*/
 
     void setLED(int value)
     {
+        this->ledValue = value;
         analogWrite(14, value);
+    }
+
+    void toggleLED()
+    {
+        if(ledValue == 0)
+        {
+            ledValue = 255;
+        }
+        else
+        {
+            ledValue = 0;
+        }
+        setLED(ledValue);
     }
 
 } pedal;
 
 // костыль
 //#include "Utils/PedalOTA.h"
+
 
 int Pedal::samplingRate = 25000;
 
@@ -87,6 +123,8 @@ Pedal::Pedal()
     pinMode(14, OUTPUT);
 
     analogWrite(14, 255);
+    preset->add(&fuzz);
+    preset->add(&delay);
 
     timer = timerBegin(0, 80, true);  // timer 0, MWDT clock period = 12.5 ns * TIMGn_Tx_WDT_CLK_PRESCALE -> 12.5 ns * 80 -> 1000 ns = 1 us, countUp
     timerAttachInterrupt(timer, &timerTick, true); // edge (not level) triggered 
@@ -99,7 +137,7 @@ void Pedal::proceed()
     if(canOutput)
     {
         int16_t out1 = in1, out2 = in2;
-        for(int i = 0; i < effects.size(); i++)
+        /*for(int i = 0; i < effects.size(); i++)
         {
             effects[i]->proceed(&out1, &out2);
             if(out1 > 4095)
@@ -119,7 +157,7 @@ void Pedal::proceed()
             {
                 out2 = 0;
             }
-        }
+        }*/
         //float volK = 1.0;
         float volK = ((float)potentiometer.getValue()) / 4095.0;
         /*if(out > 0)
@@ -134,6 +172,7 @@ void Pedal::proceed()
         {
             audio.output(0, 0);
         }*/
+        preset->proceed(&out1, &out2);
         audio.output(((float)out1)*volK, ((float)out2)*volK);
         // reset watchdog
         timerWrite(timer, 0);
@@ -160,9 +199,7 @@ void Pedal::controlsTick()
 
 void Pedal::startup()
 {
-    effects.add(&delay_effect);
-
-    screen.setActivity(&mainActivity);
+    onStartup.invoke();
 }
 
 void Pedal::draw()

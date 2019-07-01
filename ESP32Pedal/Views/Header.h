@@ -8,12 +8,12 @@ class Header : public View
     String name;
 
   public:
-    Header(String name) : View(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::FIXED, ContainerMode::NORMAL, Position(0, 0), Size(128, 16)), name(name) {}
+    Header(String & name) : View(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::FIXED, ContainerMode::NORMAL, Position(0, 0), Size(128, 16)), name(name) {}
 
-    void onDraw()
+    void onDraw(ViewGFX * gfx)
     {
-        Size bounds = gfx.getTextBounds(name);
-        gfx.drawText((size.width - bounds.width) / 2, (size.height - bounds.height) / 2 + 1, name);
+        Size bounds = gfx->getTextBounds(name);
+        gfx->drawText((size.width - bounds.width) / 2, (size.height - bounds.height) / 2 + 1, name);
         //gfx.drawText(0, 8, name, Color::WHITE);
     }
 

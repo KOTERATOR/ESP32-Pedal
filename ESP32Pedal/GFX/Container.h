@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Dimensions.h"
-#include "ViewGFX.h"
+
+class ViewGFX;
 
 enum class ContainerSizeMode
 {
@@ -30,7 +31,7 @@ class Container
     Position position;
     Size size;
 
-    ViewGFX gfx;
+    
 
   public:
     Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode, Position position, Size size, Container *parent);
@@ -53,23 +54,27 @@ class Container
     Container *getParent();
     Container * getAbsoluteParent();
     void setParent(Container *parent);
-    virtual void calculate() = 0;
-    virtual void draw();
+    virtual void calculate() {};
+    virtual void draw(ViewGFX * gfx);
 
     ContainerSizeMode getWidthMode() { return widthMode; }
     ContainerSizeMode getHeightMode() { return heightMode; }
 
-    virtual void onNext() = 0;
-    virtual void onPrev() = 0;
-    virtual void onSelect() = 0;
-    virtual bool onUnselect() = 0;
-    virtual void onHover() = 0;
-    virtual void onUnhover() = 0;
+    virtual void onNext() {}
+    virtual void onPrev() {}
+    virtual void onSelect() {}
+    virtual bool onUnselect() {}
+    virtual void onHover() {}
+    virtual void onUnhover() {}
 
-    virtual void onDraw() = 0;
+    virtual void onDraw(ViewGFX * gfx) {}
+
+    virtual ~Container()
+    {
+    }
 };
 
-Container::Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode = ContainerMode::NORMAL, Position position = Position(0, 0), Size size = Size(0, 0), Container *parent = nullptr) : gfx(size)
+Container::Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode = ContainerMode::NORMAL, Position position = Position(0, 0), Size size = Size(0, 0), Container *parent = nullptr)
 {
     this->parent = parent;
     this->widthMode = widthMode;
@@ -79,11 +84,9 @@ Container::Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, 
     this->containerMode = containerMode;
 }
 
-void Container::draw()
+void Container::draw(ViewGFX * gfx)
 {
-    gfx.setOffset(this->getAbsolutePosition());
-    gfx.clear();
-    onDraw();
+    onDraw(gfx);
     //gfx.draw();
 }
 
@@ -127,7 +130,6 @@ Size & Container::getReferenceSize()
 void Container::setSize(Size size)
 {
     this->size = size;
-    gfx.setSize(size);
 }
 
 Container *Container::getParent()

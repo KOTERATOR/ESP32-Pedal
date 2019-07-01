@@ -8,9 +8,13 @@ class Screen
 {
 private:
     Activity * currentActivity = nullptr;
+    bool isActivityDisposed = false;
     SSD1306 * display_ptr = nullptr;
 public:
-    Screen() 
+
+    ViewGFX gfx;
+
+    Screen() : gfx(Size(128, 64))
     {   
 
     }
@@ -23,22 +27,51 @@ public:
 
     void setActivity(Activity * activity)
     {
+        deallocActivity();
         currentActivity = activity;
-        currentActivity->calculate();
+        if(activity != nullptr)
+        {
+            currentActivity->calculate();
+        }
     }
+
+    void intent(Activity * activity)
+    {
+        if(activity != nullptr)
+        {
+            activity->intentActivity = currentActivity;
+            currentActivity = activity;
+            currentActivity->calculate();
+        }
+    }
+
+    void deallocActivity()
+    {
+        isActivityDisposed = true;
+        if(currentActivity != nullptr)
+        {
+            delete currentActivity;
+            Serial.println(ESP.getFreeHeap());
+            currentActivity = nullptr;
+        }
+        isActivityDisposed = false;
+    }
+
     void draw()
     {
         display_ptr->clear();
-        if(currentActivity != nullptr)
+        if(currentActivity != nullptr && !isActivityDisposed)
         {
-            currentActivity->draw();
+            gfx.clear();
+            currentActivity->draw(&gfx);
+            gfx.draw();
         }
         display_ptr->display();
     }
 
     void onNext()
     {
-        if(currentActivity != nullptr)
+        if(currentActivity != nullptr && !isActivityDisposed)
         {
             currentActivity->onNext();
         }
@@ -46,7 +79,7 @@ public:
 
     void onPrev()
     {
-        if(currentActivity != nullptr)
+        if(currentActivity != nullptr && !isActivityDisposed)
         {
             currentActivity->onPrev();
         }
@@ -54,7 +87,7 @@ public:
 
     void onSelect()
     {
-        if(currentActivity != nullptr)
+        if(currentActivity != nullptr && !isActivityDisposed)
         {
             currentActivity->onSelect();
         }
@@ -62,11 +95,16 @@ public:
 
     void onUnselect()
     {
-        if(currentActivity != nullptr)
+        if(currentActivity != nullptr && !isActivityDisposed)
         {
             if(currentActivity->onUnselect())
             {
                 currentActivity->onExit();
+                if(currentActivity->intentActivity != nullptr)
+                {
+                    currentActivity->intentActivity->onUnselect();
+                    setActivity(currentActivity->intentActivity);
+                }
             }
         }
     }
