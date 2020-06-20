@@ -3,7 +3,8 @@
 #include "List.h"
 
 template<typename ...T>
-using EventHandler = void (*)(T...);
+using EventHandler = void(*)(T...);
+//typedef std::function<T...> EventHadler;
 
 template<typename ...T>
 class Event

@@ -7,39 +7,45 @@
 class Screen
 {
 private:
-    Activity * currentActivity = nullptr;
+    Activity *currentActivity = nullptr;
     bool isActivityDisposed = false;
-    SSD1306 * display_ptr = nullptr;
-public:
+    SSD1306 *display_ptr = nullptr;
 
+public:
     ViewGFX gfx;
 
-    Screen() : gfx(Size(128, 64))
-    {   
+    Screen(): gfx(Size(128, 64))
+    {
 
     }
 
-    void setDisplay(SSD1306 * display)
+    void setDisplay(SSD1306 *display)
     {
         this->display_ptr = display;
         ViewGFX::setDisplay(display_ptr);
     }
 
-    void setActivity(Activity * activity)
+    void setActivity(Activity *activity)
     {
         deallocActivity();
         currentActivity = activity;
-        if(activity != nullptr)
+        if (activity != nullptr)
         {
             currentActivity->calculate();
         }
     }
 
-    void intent(Activity * activity)
+    Activity * getCurrentActivity()
     {
-        if(activity != nullptr)
+        return currentActivity;
+    }
+
+    void intent(Activity *activity)
+    {
+        if (activity != nullptr)
         {
             activity->intentActivity = currentActivity;
+            
             currentActivity = activity;
             currentActivity->calculate();
         }
@@ -48,7 +54,7 @@ public:
     void deallocActivity()
     {
         isActivityDisposed = true;
-        if(currentActivity != nullptr)
+        if (currentActivity != nullptr)
         {
             delete currentActivity;
             Serial.println(ESP.getFreeHeap());
@@ -60,18 +66,18 @@ public:
     void draw()
     {
         display_ptr->clear();
-        if(currentActivity != nullptr && !isActivityDisposed)
+        gfx.clear();
+        if (currentActivity != nullptr && !isActivityDisposed)
         {
-            gfx.clear();
             currentActivity->draw(&gfx);
-            gfx.draw();
         }
+        gfx.draw();
         display_ptr->display();
     }
 
     void onNext()
     {
-        if(currentActivity != nullptr && !isActivityDisposed)
+        if (currentActivity != nullptr && !isActivityDisposed)
         {
             currentActivity->onNext();
         }
@@ -79,7 +85,7 @@ public:
 
     void onPrev()
     {
-        if(currentActivity != nullptr && !isActivityDisposed)
+        if (currentActivity != nullptr && !isActivityDisposed)
         {
             currentActivity->onPrev();
         }
@@ -87,7 +93,7 @@ public:
 
     void onSelect()
     {
-        if(currentActivity != nullptr && !isActivityDisposed)
+        if (currentActivity != nullptr && !isActivityDisposed)
         {
             currentActivity->onSelect();
         }
@@ -95,17 +101,24 @@ public:
 
     void onUnselect()
     {
-        if(currentActivity != nullptr && !isActivityDisposed)
+        if (currentActivity != nullptr && !isActivityDisposed)
         {
-            if(currentActivity->onUnselect())
+            if (currentActivity->onUnselect())
             {
-                currentActivity->onExit();
-                if(currentActivity->intentActivity != nullptr)
-                {
-                    currentActivity->intentActivity->onUnselect();
-                    setActivity(currentActivity->intentActivity);
-                }
+                exitActivity();
             }
+        }
+    }
+
+    void exitActivity()
+    {
+        currentActivity->onExit();
+        if (currentActivity->intentActivity != nullptr)
+        {
+            //currentActivity->intentActivity->onUnselect();
+            setActivity(currentActivity->intentActivity);
+            currentActivity->onHover();
+            //currentActivity->centerSelectedItem();
         }
     }
 } screen;

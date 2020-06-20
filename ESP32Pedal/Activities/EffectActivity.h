@@ -1,19 +1,20 @@
 #pragma once
 
 #include "../GFX/Activity.h"
-#include "../Views/Header.h"
+#include "../Views/EffectsUnit/EffectsUnitHeader.h"
 #include "../GFX/Layout.h"
 #include "../Pedal.h"
 #include "../EffectsUnit.h"
+#include "EffectSettingsActivity.h"
 
 class EffectActivity : public Activity
 {
 private:
     EffectsUnit * unit;
-    Header effectHeader;
+    EffectsUnitHeader effectHeader;
     Layout controlsLayout = Layout(LayoutMode::HORIZONTAL, ContainerSizeMode::WRAP_CONTENT, ContainerSizeMode::WRAP_CONTENT, Position(0, 0), Size(128, 48), ContainerMode::CENTER);
 public:
-    EffectActivity(EffectsUnit * unit) : Activity(), effectHeader(unit->name)
+    EffectActivity(EffectsUnit * unit) : Activity(), effectHeader(unit)
     {
         this->unit = unit;
         add(effectHeader);
@@ -22,6 +23,11 @@ public:
             controlsLayout.add(*((Container*)unit->controls[i]));
         }
         add(controlsLayout);
+
+        effectHeader.onSelectEvent([=]()
+        {
+            pedal.intent(new EffectSettingsActivity(unit));
+        });
     }
 
     bool onExit()

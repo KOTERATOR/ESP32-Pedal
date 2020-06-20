@@ -1,3 +1,5 @@
+#pragma once
+
 #define INP_BUFFER_SIZE 8192
 #define datanum 1024
 ///////////////////////////Globals////////////

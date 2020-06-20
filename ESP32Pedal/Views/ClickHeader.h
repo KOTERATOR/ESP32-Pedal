@@ -1,15 +1,14 @@
 #pragma once
 
-#include "../GFX/EventView.h"
-#include "../Utils/Event.h"
+#include "../GFX/ClickView.h"
 
-class Header : public EventView
+class ClickHeader : public ClickView
 {
 private:
     String name;
 
 public:
-    Header(String name) : EventView(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::FIXED, ContainerMode::NORMAL, Position(0, 0), Size(128, 16)), name(name) {}
+    ClickHeader(String name) : ClickView(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::FIXED, ContainerMode::NORMAL, Position(0, 0), Size(128, 16)), name(name) {}
 
     void onDraw(ViewGFX *gfx)
     {

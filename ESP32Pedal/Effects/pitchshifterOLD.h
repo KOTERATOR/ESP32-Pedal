@@ -5,10 +5,14 @@
 #include <string.h>
 
 #define M_PI 3.14159265358979323846
-#define MAX_FRAME_LENGTH 256
+#define PIBY2_FLOAT M_PI/2.0f
+#define MAX_FRAME_LENGTH 1024
+
+#include "../Math/Math.h"
 
 void smbFft(float *fftBuffer, long fftFrameSize, long sign);
 float smbAtan2(float x, float y);
+float atan2_fast(float x, float y);
 
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -94,7 +98,7 @@ void smbPitchShift(float pitchShift, long numSampsToProcess, long fftFrameSize, 
 
 				/* compute magnitude and phase */
 				magn = 2.*sqrt(real*real + imag*imag);
-				phase = atan2(imag,real);
+				phase = atan2_fast(imag,real);
 
 				/* compute phase difference */
 				tmp = phase - gLastPhase[k];
@@ -155,8 +159,8 @@ void smbPitchShift(float pitchShift, long numSampsToProcess, long fftFrameSize, 
 				phase = gSumPhase[k];
 
 				/* get real and imag part and re-interleave */
-				gFFTworksp[2*k] = magn*cos(phase);
-				gFFTworksp[2*k+1] = magn*sin(phase);
+				gFFTworksp[2*k] = magn*Math::get_cos(phase);
+				gFFTworksp[2*k+1] = magn*Math::get_sin(phase);
 			} 
 
 			/* zero negative frequencies */
@@ -219,8 +223,8 @@ void smbFft(float *fftBuffer, long fftFrameSize, long sign)
 		ur = 1.0;
 		ui = 0.0;
 		arg = M_PI / (le2>>1);
-		wr = cos(arg);
-		wi = sign*sin(arg);
+		wr = Math::get_cos(arg);
+		wi = sign*Math::get_sin(arg);
 		for (j = 0; j < le2; j += 2) {
 			p1r = fftBuffer+j; p1i = p1r+1;
 			p2r = p1r+le2; p2i = p2r+1;
@@ -270,4 +274,26 @@ float smbAtan2(float x, float y)
   if (y == 0.) return signx * M_PI / 2.;
   
   return atan2(x, y);
+}
+
+float atan2_fast( float x, float y ) {
+    if ( x == 0.0f ) {
+        if ( y > 0.0f ) return PIBY2_FLOAT;
+        if ( y == 0.0f ) return 0.0f;
+        return -PIBY2_FLOAT;
+    }
+    float atan;
+    float z = y / x;
+    if ( fabs( z ) < 1.0f ) {
+        atan = z / (1.0f + 0.28f * z * z);
+        if ( x < 0.0f ) {
+            if ( y < 0.0f ) return atan - PI;
+            return atan + PI;
+        }
+    }
+    else {
+        atan = PIBY2_FLOAT - z / (z * z + 0.28f);
+        if ( y < 0.0f ) return atan - PI;
+    }
+    return atan;
 }

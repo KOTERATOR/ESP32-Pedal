@@ -7,7 +7,7 @@
 #include "../Views/Spacer.h"
 #include "../GFX/Layout.h"
 
-class UpdateActivity : public Activity
+class UpdateActivity : public StaticActivity
 {
    
 public:
@@ -15,7 +15,7 @@ public:
     ProgressBar pbar = ProgressBar(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::WRAP_CONTENT);
     Label updateLabel = Label(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::WRAP_CONTENT, "Updating...", 1, Color::WHITE);
     Label progressLabel = Label(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::WRAP_CONTENT);
-    UpdateActivity() : Activity()
+    UpdateActivity() : StaticActivity()
     {
         updateLabel.verticalAlignment = VTextAlignment::Center;
         updateLabel.horizontalAlignment = HTextAlignment::Center;

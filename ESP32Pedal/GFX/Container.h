@@ -18,6 +18,8 @@ enum class ContainerMode
     CENTER
 };
 
+
+
 class Container
 {
   protected:
@@ -34,6 +36,8 @@ class Container
     
 
   public:
+    bool isSelectable = true;
+
     Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode, Position position, Size size, Container *parent);
 
     Position getPosition();
@@ -54,24 +58,25 @@ class Container
     Container *getParent();
     Container * getAbsoluteParent();
     void setParent(Container *parent);
-    virtual void calculate() {};
+    virtual void calculate() = 0;
     virtual void draw(ViewGFX * gfx);
 
     ContainerSizeMode getWidthMode() { return widthMode; }
     ContainerSizeMode getHeightMode() { return heightMode; }
 
-    virtual void onNext() {}
-    virtual void onPrev() {}
-    virtual void onSelect() {}
-    virtual bool onUnselect() {}
-    virtual void onHover() {}
-    virtual void onUnhover() {}
+    virtual void onNext() = 0;
+    virtual void onPrev() = 0;
+    virtual void onSelect() = 0;
+    virtual bool onUnselect() = 0;
+    virtual void onHover() = 0;
+    virtual void onUnhover() = 0;
 
     virtual void onDraw(ViewGFX * gfx) {}
 
     virtual ~Container()
     {
     }
+
 };
 
 Container::Container(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode = ContainerMode::NORMAL, Position position = Position(0, 0), Size size = Size(0, 0), Container *parent = nullptr)

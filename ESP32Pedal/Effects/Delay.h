@@ -1,6 +1,5 @@
 #pragma once
 
-#define MAX_DELAY 6250
 
 #include "../EffectsUnit.h"
 #include "../Views/PotentiometerView.h"
@@ -10,8 +9,8 @@
 class Delay : public EffectsUnit
 {
 private:
-
-    int delaybuffer1[MAX_DELAY] = {}, delaybuffer2[MAX_DELAY] = {};
+    const static uint16_t MAX_DELAY = 6250;
+    int8_t delaybuffer1[MAX_DELAY] = {}, delaybuffer2[MAX_DELAY] = {};
     int counter = 0, delay_depth = 1;
     PotentiometerView delay = PotentiometerView(this, "DELAY", 2048);
     PotentiometerView feedback = PotentiometerView(this, "FEEDBACK", 2048);
@@ -33,13 +32,13 @@ public:
         float feedback_level = feedback.getRangedValue();
         if(feedback_level == 0.0)
         {
-            delaybuffer1[counter] = (*in1);
-            delaybuffer2[counter] = (*in2);
+            delaybuffer1[counter] = (*in1)/16;
+            delaybuffer2[counter] = (*in2)/16;
         }
         else
         {
-            delaybuffer1[counter] = ((*in1) + ((float)delaybuffer1[counter])*feedback_level);
-            delaybuffer2[counter] = ((*in2) + ((float)delaybuffer2[counter])*feedback_level);
+            delaybuffer1[counter] = ((*in1)/16 + ((float)delaybuffer1[counter])*feedback_level);
+            delaybuffer2[counter] = ((*in2)/16 + ((float)delaybuffer2[counter])*feedback_level);
         }
         delay_depth = map(delay.getValue(), 0, 4095, 1, MAX_DELAY-1);
         counter++;
@@ -48,8 +47,8 @@ public:
             counter = 0;
         }
 
-        (*in1) = ((*in1)+(delaybuffer1[counter])*level.getRangedValue())/2;
-        (*in2) = ((*in2)+(delaybuffer2[counter])*level.getRangedValue())/2;
+        (*in1) = ((*in1)+(delaybuffer1[counter])*level.getRangedValue()*16)/2;
+        (*in2) = ((*in2)+(delaybuffer2[counter])*level.getRangedValue()*16)/2;
     }
 
     ~Delay()

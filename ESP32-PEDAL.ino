@@ -23,32 +23,30 @@ SSD1306 display(0x3c, 21, 22);
                * pass = "80081104";
 PedalOTA * ota = nullptr;
 
-void IRAM_ATTR Task1code(void *parameter)
+void Task1code(void *parameter)
 {
-    
-    while (true)
+    start();
+    pedal.startup();
+    for (;;)
     {
         ota->handle();
-        pedal.controlsTick();
         pedal.draw();
-        vTaskDelay(1);
+        delayMicroseconds(100); 
     }
 }
 
-void setup()
+void start()
 {
-    Serial.begin(115200);
-    display.init();
-    screen.setDisplay(&display); 
-
     pedal.onStartup += []()
     {
-        screen.deallocActivity();
         pedal.setActivity(new PresetActivity(pedal.preset));
     };
-    Serial.println(ESP.getFreeHeap());
-    StartupActivity * startup = new StartupActivity();
-    pedal.setActivity(startup);
+
+    display.init();
+    screen.setDisplay(&display);
+    pedal.draw();
+
+    pedal.setActivity(new StartupActivity());
     pedal.draw();
     int breathDelay = 8;
     for(int i = 0; i < 256; i++)
@@ -63,8 +61,16 @@ void setup()
     }
 
     ota = new PedalOTA(ssid, pass);
-    pedal.startup();
-    xTaskCreatePinnedToCore(Task1code, /* Function to implement the task */ "Task1",   /* Name of the task */ 10000,     /* Stack size in words */ NULL,      /* Task input parameter */ 0,         /* Priority of the task */ &Task1,    /* Task handle. */ 0);        /* Core where the task should run */
+}
+
+void setup()
+{
+    Serial.begin(115200);
+    Serial.println(ESP.getFreeHeap());
+    
+    
+
+    xTaskCreatePinnedToCore(Task1code, /* Function to implement the task */ "Task1",   /* Name of the task */ 20000,     /* Stack size in words */ NULL,      /* Task input parameter */ 1,         /* Priority of the task */ &Task1,    /* Task handle. */ 0);        /* Core where the task should run */
     //delay(2000);
     //screen.deallocActivity();
 
@@ -87,11 +93,9 @@ void setup()
     delay(4000);*/
 }
 
-
 void loop()
 {   
-    //Serial.println(xPortGetCoreID());
+    pedal.controlsTick();
     pedal.getInput();
     pedal.proceed();
-    
 }

@@ -18,7 +18,7 @@ class Layout : public Container
 protected:
     Position defaultPosition;
     LayoutMode mode;
-    size_t selectedItemIndex = 0;
+    size_t selectedItemIndex = 0, nextItemIndex = 0;
     Container *selectedItem = nullptr;
     Container *prevSelectedItem = nullptr;
 
@@ -28,6 +28,8 @@ public:
     List<Container *> children;
     Layout(LayoutMode layoutMode, ContainerSizeMode widthMode, ContainerSizeMode heightMode, Position position, Size size, ContainerMode containerMode, Layout *parent);
     void add(Container &container);
+    void clear();
+    void remove(Container &container);
     void calculate();
     void draw(ViewGFX * gfx);
     void onDraw(ViewGFX * gfx);
@@ -151,6 +153,16 @@ void Layout::add(Container &container)
     children.add(&container);
 }
 
+void Layout::clear()
+{
+    children.clear();
+}
+
+void Layout::remove(Container & container)
+{
+    children.remove(&container);
+}
+
 Size Layout::getChildrenBounds()
 {
     int w = 0, h = 0;
@@ -190,19 +202,16 @@ Size Layout::getChildrenBounds()
 
 void Layout::draw(ViewGFX * gfx)
 {
-    gfx->setCurrentContainer(this);
+    for (int i = 0; i < children.size(); i++)
+    {
+        gfx->setCurrentContainer(children[i]);
+        children[i]->draw(gfx);
+    }
     this->onDraw(gfx);
 }
 
 void Layout::onDraw(ViewGFX * gfx)
 {
-    for (int i = 0; i < children.size(); i++)
-    {
-        gfx->setCurrentContainer(children[i]);
-        children[i]->draw(gfx);
-        
-    }
-    
     if(drawBorder)
     {
         gfx->setCurrentContainer(this);
@@ -228,6 +237,21 @@ void Layout::onDraw(ViewGFX * gfx)
             }
         }
     }
+
+    /*if(mode == LayoutMode::HORIZONTAL)
+    {
+        if(size.width > 128)
+        {
+            gfx->drawLine(0, size.height-1, size.width-1, size.height-1, Color::BLACK);
+            float length = (128.0/(float)size.width) * 128.0;
+            int pos = 0;
+            if(children[selectedItemIndex] != nullptr)
+            {
+                pos = (128.0/(float)size.width) * children[selectedItemIndex]->getPosition().x;
+            }
+            gfx->drawLine(-getPosition().x + pos, size.height-1, -getPosition().x + pos + length, size.height-1, Color::WHITE);
+        }
+    }*/
 }
 
 void Layout::onSelect()
@@ -276,6 +300,7 @@ bool Layout::onUnselect()
     {
         children[selectedItemIndex]->onUnhover();
         selectedItemIndex = 0;
+        nextItemIndex = 0;
         centerSelectedItem();
         selectedItem = nullptr;
         isSelected = false;
@@ -292,12 +317,23 @@ void Layout::onNext()
     }
     else
     {
-        if (selectedItemIndex < children.size() - 1)
+        
+        if (selectedItemIndex < children.size() - 1 && nextItemIndex < children.size()-1)
         {
-            children[selectedItemIndex]->onUnhover();
-            selectedItemIndex++;
-            children[selectedItemIndex]->onHover();
-            centerSelectedItem();
+            if(nextItemIndex < selectedItemIndex) nextItemIndex = selectedItemIndex;
+            nextItemIndex += 1;
+            if(children[nextItemIndex]->isSelectable)
+            {
+                children[selectedItemIndex]->onUnhover();
+                selectedItemIndex = nextItemIndex;
+                children[selectedItemIndex]->onHover();
+                centerSelectedItem();
+            }
+            else
+            {
+                
+                onNext();
+            }
         }
     }
 }
@@ -310,12 +346,23 @@ void Layout::onPrev()
     }
     else
     {
-        if (selectedItemIndex > 0)
+        
+        if (selectedItemIndex > 0 && nextItemIndex > 0)
         {
-            children[selectedItemIndex]->onUnhover();
-            selectedItemIndex--;
-            children[selectedItemIndex]->onHover();
-            centerSelectedItem();
+            if(nextItemIndex > selectedItemIndex) nextItemIndex = selectedItemIndex;
+            nextItemIndex -= 1;
+            if(children[nextItemIndex]->isSelectable)
+            {
+                children[selectedItemIndex]->onUnhover();
+                selectedItemIndex = nextItemIndex;
+                children[selectedItemIndex]->onHover();
+                centerSelectedItem();
+            }
+            else
+            {
+                onPrev();
+            }
+            
         }
     }
 }
@@ -346,34 +393,37 @@ void Layout::onUnhover()
 
 void Layout::centerSelectedItem()
 {
-    Container *child = children[selectedItemIndex];
-    Container *absoluteParent = getAbsoluteParent();
-    if (mode == LayoutMode::HORIZONTAL)
+    if(selectedItemIndex >= 0 && selectedItemIndex < children.size())
     {
-        //setX(64 - children[selectedItemIndex]->getPosition().x - children[selectedItemIndex]->getSize().width / 2);
-        if (child->getAbsolutePosition().x + child->getSize().width > 128)
+        Container *child = children[selectedItemIndex];
+        Container *absoluteParent = getAbsoluteParent();
+        if (mode == LayoutMode::HORIZONTAL)
         {
-            int val = this->getPosition().x - (child->getAbsolutePosition().x + child->getSize().width - 128);
-            this->setX(val);
+            //setX(64 - children[selectedItemIndex]->getPosition().x - children[selectedItemIndex]->getSize().width / 2);
+            if (child->getAbsolutePosition().x + child->getSize().width > 128)
+            {
+                int val = this->getPosition().x - (child->getAbsolutePosition().x + child->getSize().width - 128);
+                this->setX(val);
+            }
+            else if (child->getAbsolutePosition().x < 0)
+            {
+                int val = this->getPosition().x - child->getAbsolutePosition().x;
+                this->setX(val);
+            }
         }
-        else if (child->getAbsolutePosition().x < 0)
+        else if (mode == LayoutMode::VERTICAL)
         {
-            int val = this->getPosition().x - child->getAbsolutePosition().x;
-            this->setX(val);
-        }
-    }
-    else if (mode == LayoutMode::VERTICAL)
-    {
-        //setY(32 - children[selectedItemIndex]->getPosition().y - children[selectedItemIndex]->getSize().height / 2);
-        if (child->getAbsolutePosition().y + child->getSize().height > 64)
-        {
-            int val = absoluteParent->getPosition().y - (child->getAbsolutePosition().y + child->getSize().height - 64);
-            absoluteParent->setY(val);
-        }
-        else if (child->getAbsolutePosition().y < 0)
-        {
-            int val = absoluteParent->getPosition().y - child->getAbsolutePosition().y;
-            absoluteParent->setY(val);
+            //setY(32 - children[selectedItemIndex]->getPosition().y - children[selectedItemIndex]->getSize().height / 2);
+            if (child->getAbsolutePosition().y + child->getSize().height > 64)
+            {
+                int val = absoluteParent->getPosition().y - (child->getAbsolutePosition().y + child->getSize().height - 64);
+                absoluteParent->setY(val);
+            }
+            else if (child->getAbsolutePosition().y < 0)
+            {
+                int val = absoluteParent->getPosition().y - child->getAbsolutePosition().y;
+                absoluteParent->setY(val);
+            }
         }
     }
 }

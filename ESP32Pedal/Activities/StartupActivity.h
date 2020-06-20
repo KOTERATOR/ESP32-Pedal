@@ -73,12 +73,12 @@ const unsigned char bitmap [] PROGMEM=
 
 
 
-class StartupActivity : public Activity
+class StartupActivity : public StaticActivity
 {
 public:
 
 
-    StartupActivity() : Activity()
+    StartupActivity() : StaticActivity()
     {
         
     }

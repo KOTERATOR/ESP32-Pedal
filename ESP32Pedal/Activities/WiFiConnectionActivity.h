@@ -8,7 +8,7 @@
 #include "../Views/ProgressBar.h"
 #include "../Views/Spacer.h"
 
-class WiFiConnectionActivity : public Activity
+class WiFiConnectionActivity : public StaticActivity
 {
 public:
     Spacer topSpacer = Spacer(Size(128, 12));
@@ -16,7 +16,7 @@ public:
     Spacer betweenSpacer = Spacer(Size(128, 12));
     Label ssidLabel = Label(ContainerSizeMode::MATCH_PARENT, ContainerSizeMode::WRAP_CONTENT);
 
-    WiFiConnectionActivity(const String & ssid) : Activity()
+    WiFiConnectionActivity(const String & ssid) : StaticActivity()
     {
         pedal.setLED(0);
         connectingLabel.verticalAlignment = VTextAlignment::Center;

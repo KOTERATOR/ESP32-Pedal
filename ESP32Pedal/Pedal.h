@@ -8,11 +8,9 @@
 #include "GFX/Screen.h"
 #include "EffectsUnit.h"
 #include "Activities/UpdateActivity.h"
-#include "Effects/Fuzz.h"
-#include "Effects/Delay.h"
-#include "Effects/Octaver.h"
 #include "GFX/Screen.h"
 #include "Preset.h"
+#include "EffectsLibrary.h"
 
 
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
@@ -27,10 +25,7 @@ private:
     hw_timer_t * timer = NULL;
     Audio audio;
     
-    
-
-    Fuzz fuzz = Fuzz();
-    Delay delay = Delay();
+    //Delay * delay2 = new Delay();
     //EffectActivity mainActivity = EffectActivity(&delay_effect);
 
     static int samplingRate;
@@ -52,7 +47,6 @@ private:
 public:
     Preset * preset = new Preset("DELAYED FUZZ");
     Event<> onStartup;
-    List<EffectsUnit*> effects;
     Pedal();
 
     void proceed();
@@ -67,6 +61,11 @@ public:
         return samplingRate;
     }
 
+    Activity * getCurrentActivity()
+    {
+        return screen.getCurrentActivity();
+    }
+
     void setActivity(Activity * activity)
     {
         screen.setActivity(activity);
@@ -75,6 +74,11 @@ public:
     void intent(Activity * activity)
     {
         screen.intent(activity);
+    }
+
+    void exitActivity()
+    {
+        screen.exitActivity();
     }
     /*void intent(Activity activity)
     {
@@ -107,9 +111,6 @@ public:
 
 } pedal;
 
-// костыль
-//#include "Utils/PedalOTA.h"
-
 
 int Pedal::samplingRate = 25000;
 
@@ -123,8 +124,7 @@ Pedal::Pedal()
     pinMode(14, OUTPUT);
 
     analogWrite(14, 255);
-    preset->add(&fuzz);
-    preset->add(&delay);
+    //preset->add(delay2);
 
     timer = timerBegin(0, 80, true);  // timer 0, MWDT clock period = 12.5 ns * TIMGn_Tx_WDT_CLK_PRESCALE -> 12.5 ns * 80 -> 1000 ns = 1 us, countUp
     timerAttachInterrupt(timer, &timerTick, true); // edge (not level) triggered 
@@ -159,7 +159,7 @@ void Pedal::proceed()
             }
         }*/
         //float volK = 1.0;
-        float volK = ((float)potentiometer.getValue()) / 4095.0;
+        float volK = potentiometer.getRangedValue();
         /*if(out > 0)
         {
             audio.output(((float)out)*volK, 0);

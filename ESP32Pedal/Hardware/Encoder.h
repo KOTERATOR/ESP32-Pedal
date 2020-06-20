@@ -6,7 +6,7 @@
 class Encoder
 {
 private:
-    long prevMillis = 0;
+    unsigned long prevMillis = 0;
     int pinA = 0, pinB = 0, pinD = 0;
     bool A = false, B = false;
     

@@ -8,7 +8,7 @@ class Layout;
 class View : public Container
 {
   protected:
-    bool isSelectable = true;
+
   public:
     bool drawBorder = false, isSelected = false;
     View(ContainerSizeMode widthMode, ContainerSizeMode heightMode, ContainerMode containerMode, Position position, Size size, Container *parent);
@@ -86,10 +86,8 @@ bool View::onUnselect()
 
 void View::onNext()
 {
-
 }
 
 void View::onPrev()
 {
-
 }

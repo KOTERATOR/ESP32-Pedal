@@ -35,7 +35,6 @@ protected:
     Size size;
     Position offset;
     Container * currentContainer;
-    bool isDisposed = false;
 
     static SSD1306 *display_ptr;
 
@@ -52,6 +51,7 @@ public:
 
     void drawPixel(int16_t x, int16_t y, uint16_t color);
     void drawText(int16_t x, int16_t y, String &str, int16_t color = Color::WHITE, int8_t textSize = 1);
+    void drawTextWithInvertedChar(int16_t x, int16_t y, String &str, int16_t color, int8_t textSize, size_t invertCharIndex, int16_t invertColor = Color::BLACK);
     void drawAlignedText(HTextAlignment hmode, VTextAlignment vmode, String &str, int16_t color, int8_t textSize = 1);
     Size getTextBounds(String & str, uint8_t textSize = 1);
 
@@ -80,7 +80,7 @@ ViewGFX::ViewGFX(Size size) : Adafruit_GFX(size.width, size.height)
         buffer[i] = new int8_t[size.height];
         for (int j = 0; j < size.height; j++)
         {
-            buffer[i][j] = Color::BLACK;
+            buffer[i][j] = Color::TRANSPARENT;
         }
     }
     cp437(true);
@@ -88,9 +88,6 @@ ViewGFX::ViewGFX(Size size) : Adafruit_GFX(size.width, size.height)
 
 ViewGFX::~ViewGFX()
 {
-    if(!isDisposed)
-    {
-    isDisposed = true;
     Serial.println("ViewGFX dtor");
     Serial.print(size.width); Serial.print(" "); Serial.println(size.height);
     auto he = ESP.getFreeHeap();
@@ -100,7 +97,6 @@ ViewGFX::~ViewGFX()
     }
     delete [] buffer;
     Serial.println("Deallocated - " + String(ESP.getFreeHeap()-he));
-    }
 }
 
 void ViewGFX::setDisplay(SSD1306 *display)
@@ -110,7 +106,7 @@ void ViewGFX::setDisplay(SSD1306 *display)
 
 void ViewGFX::draw()
 {
-    if (display_ptr != nullptr && !isDisposed)
+    if (display_ptr != nullptr)
     {
         for (int x = 0; x < size.width; x++)
         {
@@ -141,14 +137,11 @@ void ViewGFX::draw()
 
 void ViewGFX::clear()
 {
-    if(!isDisposed)
+    for (int x = 0; x < size.width; x++)
     {
-        for (int x = 0; x < size.width; x++)
+        for (int y = 0; y < size.height; y++)
         {
-            for (int y = 0; y < size.height; y++)
-            {
-                buffer[x][y] = Color::TRANSPARENT;
-            }
+            buffer[x][y] = Color::TRANSPARENT;
         }
     }
 }
@@ -158,12 +151,12 @@ void ViewGFX::drawPixel(int16_t x, int16_t y, uint16_t color)
     if(currentContainer != nullptr)
     {
         Size ccSize = currentContainer->getSize();
-        if (x >= 0 && x < ccSize.width && y >= 0 && y < ccSize.height && !isDisposed)
+        if (x >= 0 && x < ccSize.width && y >= 0 && y < ccSize.height)
         {
             Position ccPos = currentContainer->getAbsolutePosition();
             x += ccPos.x;
             y += ccPos.y;
-            if (x >= 0 && x < this->width() && y >= 0 && y < this->height())
+            if (x >= 0 && x < this->size.width && y >= 0 && y < this->size.width)
             {
                 switch (color)
                 {
@@ -195,6 +188,29 @@ void ViewGFX::drawText(int16_t x, int16_t y, String &str, int16_t color, int8_t 
     for (int i = 0; i < str.length(); i++)
     {
         write(str[i]);
+    }
+}
+
+void ViewGFX::drawTextWithInvertedChar(int16_t x, int16_t y, String &str, int16_t color, int8_t textSize, size_t invertCharIndex, int16_t invertColor)
+{
+    setCursor(x, y);
+    setTextSize(textSize);
+    setTextColor(color);
+    uint16_t invertbgcolor = textcolor, invertcolor = invertColor;
+
+    for (int i = 0; i < str.length(); i++)
+    {
+        if(i == invertCharIndex)
+        {
+            textcolor = invertColor;
+            textbgcolor = invertbgcolor;
+            write(str[i]);
+            setTextColor(color);
+        }
+        else
+        {
+            write(str[i]);
+        }
     }
 }
 
